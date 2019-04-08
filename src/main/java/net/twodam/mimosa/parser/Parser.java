@@ -1,8 +1,9 @@
 package net.twodam.mimosa.parser;
 
+import net.twodam.mimosa.evaluator.expressions.ConstExpr;
+import net.twodam.mimosa.evaluator.expressions.VarExpr;
 import net.twodam.mimosa.types.*;
 
-import java.util.ArrayList;
 import java.util.Stack;
 
 public class Parser {
@@ -11,7 +12,7 @@ public class Parser {
     public static final String UNFINISHED_SLIST = "Found unfinished MimosaList.";
 
     /**
-     * x -> MimosaVal x
+     * 1 -> const-expr 1
      * (x y (a (z 2 ) (a 1) ) ... 1) -> MimosaList (x y (z 2) ... 1)
      * ' ' complete a val
      * '(' increase list level
@@ -20,7 +21,7 @@ public class Parser {
      * @param data
      * @return
      */
-    public MimosaType parse(char[] data) {
+    public MimosaPair parse(char[] data) {
         int listLevel = 0;
         int lastScan = -1;
         int lastParseStart = data.length;
@@ -61,8 +62,7 @@ public class Parser {
                                 case ' ':
                                     //try to complete a sval
                                     if (valBuilder.length() > 0) {
-                                        MimosaVal mimosaVal = parseMimosaVal(valBuilder.reverse().toString());
-                                        stack.push(mimosaVal);
+                                        stack.push(parseSingleExpr(valBuilder.reverse().toString()));
                                         valBuilder.setLength(0);
                                     } else {
                                         //ignore
@@ -78,8 +78,7 @@ public class Parser {
                                     break;
                                 case '(':
                                     if (valBuilder.length() > 0) {
-                                        MimosaVal mimosaVal = parseMimosaVal(valBuilder.reverse().toString());
-                                        stack.push(mimosaVal);
+                                        stack.push(parseSingleExpr(valBuilder.reverse().toString()));
                                         valBuilder.setLength(0);
                                     }
 
@@ -116,7 +115,7 @@ public class Parser {
 
         if(listLevel==0) {
             if(pairStack.size() == 0) {
-                return parseMimosaVal(new String(data));
+                return parseSingleExpr(new String(data));
             } else if(pairStack.size() == 1) {
                 return pairStack.pop();
             } else {
@@ -128,17 +127,15 @@ public class Parser {
     }
 
     /**
-     * Number / Symbol
+     * Wrap Number / Symbol into single special expression
      * @param expStr
      * @return
      */
-    public MimosaVal parseMimosaVal(String expStr) {
-        MimosaVal mimosaVal;
+    public MimosaPair parseSingleExpr(String expStr) {
         try {
-            mimosaVal = MimosaNumber.numToVal(Integer.valueOf(expStr));
+            return ConstExpr.wrap(MimosaNumber.numToVal(Integer.valueOf(expStr)));
         } catch (NumberFormatException nfe) {
-            mimosaVal = MimosaSymbol.strToSymbol(expStr);
+            return VarExpr.wrap(MimosaSymbol.strToSymbol(expStr));
         }
-        return mimosaVal;
     }
 }

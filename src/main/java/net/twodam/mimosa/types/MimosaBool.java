@@ -6,8 +6,8 @@ import net.twodam.mimosa.utils.TypeUtil;
  * Created by luckykoala on 19-4-5.
  */
 public class MimosaBool extends MimosaVal {
-    private static final MimosaBool TRUE = new MimosaBool(true);
-    private static final MimosaBool FALSE = new MimosaBool(false);
+    public static final MimosaBool TRUE = new MimosaBool(true);
+    public static final MimosaBool FALSE = new MimosaBool(false);
 
     MimosaBool(boolean bool) {
         super(bool);

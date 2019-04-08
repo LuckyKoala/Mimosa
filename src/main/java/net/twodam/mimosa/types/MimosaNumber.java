@@ -24,4 +24,10 @@ public class MimosaNumber extends MimosaVal {
     public static boolean isZero(MimosaVal mimosaVal) {
         return ZERO.equals(mimosaVal);
     }
+
+    public static MimosaNumber substract(MimosaVal val1, MimosaVal val2) {
+        int num1 = valToNum(val1);
+        int num2 = valToNum(val2);
+        return numToVal(num1 - num2);
+    }
 }

@@ -11,17 +11,22 @@ import java.util.function.Function;
 public class TypeUtil {
     private static final String UNCOMPATIBLE_TYPE_MESSAGE_TEMPLATE = "%s is not a instance of type [%s]";
 
+    public static boolean isCompatibleType(Class clazz, MimosaType val) {
+        return clazz.isInstance(val);
+    }
+
     public static void checkType(Class clazz, MimosaType val) {
-        if(!clazz.isInstance(val)) {
+        if(!isCompatibleType(clazz, val))
             throw new UncompatibleTypeException(String.format(UNCOMPATIBLE_TYPE_MESSAGE_TEMPLATE, val, clazz.getSimpleName()));
-        }
     }
 
     public static void checkType(Class clazz, MimosaType val, String message) {
-        if(!clazz.isInstance(val)) throw new UncompatibleTypeException(message);
+        if(!isCompatibleType(clazz, val))
+            throw new UncompatibleTypeException(message);
     }
 
     public static void checkType(Class clazz, MimosaType val, Function<MimosaType, String> messageMapper) {
-        if(!clazz.isInstance(val)) throw new UncompatibleTypeException(messageMapper.apply(val));
+        if(!isCompatibleType(clazz, val))
+            throw new UncompatibleTypeException(messageMapper.apply(val));
     }
 }
