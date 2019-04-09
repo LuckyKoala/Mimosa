@@ -1,7 +1,6 @@
 package net.twodam.mimosa.evaluator;
 
 import net.twodam.mimosa.exceptions.MimosaNoBindingException;
-import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
 
@@ -15,9 +14,9 @@ import java.util.Objects;
 public class Enviroment {
     static class Entry {
         MimosaSymbol key;
-        MimosaPair value;
+        MimosaType value;
 
-        Entry(MimosaSymbol key, MimosaPair value) {
+        Entry(MimosaSymbol key, MimosaType value) {
             this.key = key;
             this.value = value;
         }
@@ -61,14 +60,14 @@ public class Enviroment {
      * @param value value of new binding.
      * @return extended enviroment.
      */
-    public static Enviroment extend(Enviroment env, MimosaSymbol key, MimosaPair value) {
+    public static Enviroment extend(Enviroment env, MimosaSymbol key, MimosaType value) {
         Enviroment extendedEnv = new Enviroment(env);
         extendedEnv.entryList.add(new Entry(key, value));
         return extendedEnv;
     }
 
-    public static MimosaPair search(Enviroment env, MimosaSymbol key) {
-        final int index = env.entryList.indexOf(Entry.wrapKey(key));
+    public static MimosaType search(Enviroment env, MimosaSymbol key) {
+        final int index = env.entryList.lastIndexOf(Entry.wrapKey(key));
         if(index != -1) {
             //Found binding of key
             return env.entryList.get(index).value;

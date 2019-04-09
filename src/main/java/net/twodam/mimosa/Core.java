@@ -1,7 +1,5 @@
 package net.twodam.mimosa;
 
-import java.util.Scanner;
-
 /**
  * REPL
  *

@@ -6,7 +6,7 @@ import net.twodam.mimosa.types.MimosaSymbol;
  * Created by luckykoala on 19-4-8.
  */
 public class MimosaNoBindingException extends MimosaException {
-    private static final String NO_BINDING_TEMPLATE = "Can't find the binding of variable %s";
+    private static final String NO_BINDING_TEMPLATE = "Can't find the binding of symbol %s";
 
     public MimosaNoBindingException(String message) {
         super(message);

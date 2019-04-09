@@ -1,6 +1,9 @@
 package net.twodam.mimosa.evaluator.expressions;
 
-import net.twodam.mimosa.types.*;
+import net.twodam.mimosa.types.MimosaNumber;
+import net.twodam.mimosa.types.MimosaPair;
+import net.twodam.mimosa.types.MimosaSymbol;
+import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;
 import net.twodam.mimosa.utils.TypeUtil;
 
@@ -10,7 +13,7 @@ import net.twodam.mimosa.utils.TypeUtil;
  * Created by luckykoala on 19-4-5.
  */
 public class ConstExpr {
-    private static MimosaSymbol TAG = MimosaSymbol.strToSymbol("#const");
+    public static MimosaSymbol TAG = MimosaSymbol.strToSymbol("#const");
 
     public static boolean check(MimosaPair expr) {
         return TAG.equals(expr.car());

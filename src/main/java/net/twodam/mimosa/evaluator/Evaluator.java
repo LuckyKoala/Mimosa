@@ -1,10 +1,7 @@
 package net.twodam.mimosa.evaluator;
 
 import net.twodam.mimosa.evaluator.expressions.*;
-import net.twodam.mimosa.types.MimosaBool;
-import net.twodam.mimosa.types.MimosaNumber;
-import net.twodam.mimosa.types.MimosaPair;
-import net.twodam.mimosa.types.MimosaVal;
+import net.twodam.mimosa.types.*;
 import net.twodam.mimosa.utils.TypeUtil;
 
 /**
@@ -12,30 +9,23 @@ import net.twodam.mimosa.utils.TypeUtil;
  * lambda
  */
 public class Evaluator {
-    public MimosaVal eval(MimosaPair expr, Enviroment env) {
+    public static MimosaType eval(MimosaPair expr, Enviroment env) {
         if(ConstExpr.check(expr)) {
             return ConstExpr.constant(expr);
         }
-        else if(VarExpr.check(expr)) {
-            return eval(Enviroment.search(env, VarExpr.variable(expr)), env);
-        }
-        else if(LetExpr.check(expr)) {
-            return eval(LetExpr.expression(expr),
-                    Enviroment.extend(env,
-                            LetExpr.bindingKey(expr),
-                            LetExpr.bindingValue(expr)));
-        }
-        else if(ZeroPredExpr.check(expr)) {
-            MimosaVal val = eval(ZeroPredExpr.predicate(expr), env);
-            TypeUtil.checkType(MimosaNumber.class, val);
-            MimosaNumber num = (MimosaNumber) val;
-            return MimosaNumber.isZero(val) ?
-                    MimosaBool.TRUE : MimosaBool.FALSE;
+        else if(SymbolExpr.check(expr)) {
+            return Enviroment.search(env, SymbolExpr.symbol(expr));
         }
         else if(DiffExpr.check(expr)) {
-            MimosaVal val1 = eval(DiffExpr.exp1(expr), env);
-            MimosaVal val2 = eval(DiffExpr.exp2(expr), env);
-            return MimosaNumber.substract(val1, val2);
+            MimosaType val1 = eval(DiffExpr.exp1(expr), env);
+            MimosaType val2 = eval(DiffExpr.exp2(expr), env);
+            return MimosaNumber.substract((MimosaVal) val1, (MimosaVal) val2);
+        }
+        else if(ZeroPredExpr.check(expr)) {
+            MimosaType val = eval(ZeroPredExpr.predicate(expr), env);
+            TypeUtil.checkType(MimosaNumber.class, val);
+            return MimosaNumber.isZero((MimosaVal) val) ?
+                    MimosaBool.TRUE : MimosaBool.FALSE;
         }
         else if(IfExpr.check(expr)) {
             MimosaPair predicate = IfExpr.predicate(expr);
@@ -44,6 +34,13 @@ public class Evaluator {
             } else {
                 return eval(IfExpr.falseExpr(expr), env);
             }
+        }
+        else if(LetExpr.check(expr)) {
+            Enviroment extendedEnv = Enviroment.extend(env,
+                    LetExpr.bindingKey(expr),
+                    eval(LetExpr.bindingValue(expr), env));
+            MimosaPair body = LetExpr.body(expr);
+            return eval(body, extendedEnv);
         }
         else {
             throw new RuntimeException("Unsupported syntax: " + expr);

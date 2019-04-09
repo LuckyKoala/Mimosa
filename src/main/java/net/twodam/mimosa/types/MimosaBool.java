@@ -22,7 +22,13 @@ public class MimosaBool extends MimosaVal {
         return (boolean) mimosaVal.val;
     }
 
-    public static boolean isTrue(MimosaVal val) {
+    public static boolean isTrue(MimosaType val) {
+        TypeUtil.checkType(MimosaBool.class, val);
         return TRUE==val;
+    }
+
+    @Override
+    public String toString() {
+        return this==TRUE ? "#t" : "#f";
     }
 }

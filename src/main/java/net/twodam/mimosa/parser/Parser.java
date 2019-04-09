@@ -1,141 +1,169 @@
 package net.twodam.mimosa.parser;
 
-import net.twodam.mimosa.evaluator.expressions.ConstExpr;
-import net.twodam.mimosa.evaluator.expressions.VarExpr;
+import net.twodam.mimosa.evaluator.expressions.*;
 import net.twodam.mimosa.types.*;
 
 import java.util.Stack;
 
 public class Parser {
-    public static final String SLIST_CHAR_IN_SVAL = "Can\'t handled \'(\' and \')\' while parsing MimosaVal, try to turn it into escape char.";
-    public static final String UNFINISHED_ESCAPE_LITERAL = "Found unfinished escape literal.";
-    public static final String UNFINISHED_SLIST = "Found unfinished MimosaList.";
+    static class State {
+        State upperState;
+        int startBound; //index of '('
+        int parsedStart;
+        int parsedEnd;
+        boolean pairDotPresent;
+        Stack<MimosaType> tokenStack;
+        Stack<MimosaPair> parsedExprStack;
 
-    /**
-     * 1 -> const-expr 1
-     * (x y (a (z 2 ) (a 1) ) ... 1) -> MimosaList (x y (z 2) ... 1)
-     * ' ' complete a val
-     * '(' increase list level
-     * ')' reverse and parse a list
-     * '.' indicates a pair which combines exactly two values
-     * @param data
-     * @return
-     */
-    public MimosaPair parse(char[] data) {
-        int listLevel = 0;
-        int lastScan = -1;
-        int lastParseStart = data.length;
-        int lastParseEnd = data.length;
-        StringBuilder valBuilder = new StringBuilder();
-        Stack<MimosaPair> pairStack = new Stack<>();
-
-        for(char ch : data) {
-            lastScan++;
-
-            switch (ch) {
-                case '(':
-                    if(valBuilder.length() == 0) {
-                        listLevel++;
-                    } else {
-                        throw new ParsingException(SLIST_CHAR_IN_SVAL);
-                    }
-                    break;
-                case ')':
-                    //reverse and parse a list
-                    if(listLevel > 0) {
-                        Stack<MimosaType> stack = new Stack<>();
-
-                        boolean pairDotPresented = false; //Pair (a . b)
-                        //MimosaList mimosaList = MimosaList.nil();
-                        label:
-                        for (int i = lastScan - 1; i >= 0; i--) {
-                            if (i == lastParseEnd) {
-                                //Handle parsed expr
-                                while (pairStack.size() > 0) {
-                                    stack.push(pairStack.pop());
-                                }
-                                i = lastParseStart - 1;
-                            }
-
-                            char current = data[i];
-                            switch (current) {
-                                case ' ':
-                                    //try to complete a sval
-                                    if (valBuilder.length() > 0) {
-                                        stack.push(parseSingleExpr(valBuilder.reverse().toString()));
-                                        valBuilder.setLength(0);
-                                    } else {
-                                        //ignore
-                                    }
-                                    break;
-                                case '.':
-                                    if(stack.size() == 1) {
-                                        pairDotPresented = true;
-                                    } else {
-                                        throw new ParsingException("Pair combines exactly two values in the form (a . b)," +
-                                                " but " + stack.size() + " values occurred after the dot!");
-                                    }
-                                    break;
-                                case '(':
-                                    if (valBuilder.length() > 0) {
-                                        stack.push(parseSingleExpr(valBuilder.reverse().toString()));
-                                        valBuilder.setLength(0);
-                                    }
-
-                                    //try to complete parsing a mimosa list
-                                    if(pairDotPresented) {
-                                        if(stack.size() == 2) {
-                                            pairStack.push(MimosaPair.cons(stack.pop(), stack.pop()));
-                                        } else {
-                                            throw new ParsingException("Pair combines exactly two values in the form (a . b)," +
-                                                    " but " + stack.size() + " values occurred in total!");
-                                        }
-                                    } else {
-                                        pairStack.push(MimosaList.list(stack));
-                                    }
-                                    listLevel--;
-                                    lastParseEnd = lastScan;
-                                    if (i < lastParseStart)
-                                        lastParseStart = i; //Only increase size of region of parsed exprs
-
-                                    break label;
-                                default:
-                                    valBuilder.append(current);
-                                    break;
-                            }
-                        }
-                    } else {
-                        throw new ParsingException(SLIST_CHAR_IN_SVAL);
-                    }
-                    break;
-                default:
-                    break;
-            }
+        private State(State upperState, int startBound) {
+            this.upperState = upperState;
+            this.startBound = startBound;
+            this.parsedStart = Integer.MAX_VALUE;
+            this.parsedEnd = startBound;
+            this.pairDotPresent = false;
+            this.tokenStack = new Stack<>();
+            this.parsedExprStack = new Stack<>();
         }
 
-        if(listLevel==0) {
-            if(pairStack.size() == 0) {
-                return parseSingleExpr(new String(data));
-            } else if(pairStack.size() == 1) {
-                return pairStack.pop();
+        static State topStateOf(int startBound) {
+            return new State(null, startBound);
+        }
+
+        boolean isTopState() {
+            return upperState == null;
+        }
+
+        State nextState(int startBound) {
+            return new State(this, startBound);
+        }
+
+        State mergeToUpperState(int parsedEnd) {
+            if(pairDotPresent) {
+                if(tokenStack.size() == 2) {
+                    upperState.parsedExprStack.push(MimosaPair.cons(tokenStack.pop(), tokenStack.pop()));
+                } else {
+                    throw ParserException.notExactlyTwoValuesInPair(tokenStack.size());
+                }
             } else {
-                throw new RuntimeException("The size of PairStack is more than 1, something wrong!");
+                upperState.parsedExprStack.push(MimosaList.list(tokenStack));
             }
-        } else {
-            throw new ParsingException(UNFINISHED_SLIST);
+
+            if(startBound < upperState.parsedStart) upperState.parsedStart = startBound;
+            upperState.parsedEnd = parsedEnd;
+            return upperState;
         }
     }
 
     /**
-     * Wrap Number / Symbol into single special expression
-     * @param expStr
+     * 1 -> const-expr 1
+     * (x y (a (z 2 ) (a 1) 1) ... 1) -> MimosaList (x y (z 2) ... 1)
+     * ' ' complete a val
+     * '(' increase list level
+     * ')' reverse and parse a list
+     * '.' indicates a pair which combines exactly two values
      * @return
      */
-    public MimosaPair parseSingleExpr(String expStr) {
+    public static MimosaPair parse(String data) {
+        StringBuilder tokenBuilder = new StringBuilder();
+        State state = State.topStateOf(0);
+
+        for(int i=0; i<data.length(); i++) {
+            char c = data.charAt(i);
+
+            switch (c) {
+                case '(':
+                    if(tokenBuilder.length() == 0) {
+                        state = state.nextState(i); //new state for deeper depth
+                    } else {
+                        throw ParserException.listCharInVal();
+                    }
+                    break;
+
+                case ')':
+                    //Parse remain chars
+                    for(int j = i-1; j>state.startBound; j--) {
+                        //Skip parsed chars
+                        if(j == state.parsedEnd) {
+                            //Save parsed expr
+                            while(!state.parsedExprStack.empty()) {
+                                state.tokenStack.push(state.parsedExprStack.pop());
+                            }
+                            j = state.parsedStart - 1;
+                            if(j <= state.startBound) {
+                                //All chars in this level has been parsed
+                                break;
+                            }
+                        }
+
+                        char ch = data.charAt(j);
+
+                        switch (ch) {
+                            case '(':
+                            case ')':
+                                //This should never happened
+                                throw new RuntimeException("Parser error");
+                            case '.':
+                                if (!state.pairDotPresent) {
+                                    state.pairDotPresent = true;
+                                } else {
+                                    throw ParserException.multiDotInPair();
+                                }
+                                break;
+                            case ' ':
+                                if(tokenBuilder.length() > 0) {
+                                    state.tokenStack.push(parseSingleExpr(tokenBuilder.reverse().toString()));
+                                    tokenBuilder.setLength(0);
+                                }
+
+                                break;
+                            default:
+                                tokenBuilder.append(ch);
+                                break;
+                        }
+                    }
+                    //Push possibly remain token
+                    if(tokenBuilder.length() > 0) {
+                        state.tokenStack.push(parseSingleExpr(tokenBuilder.reverse().toString()));
+                        tokenBuilder.setLength(0);
+                    }
+                    state = state.mergeToUpperState(i);
+
+                    break;
+            }
+        }
+
+        if(state.isTopState()) {
+            int parsedExprStackSize = state.parsedExprStack.size();
+            if(parsedExprStackSize == 0) {
+                return (MimosaPair) parseSingleExpr(data);
+            } else if(parsedExprStackSize == 1) {
+                return state.parsedExprStack.pop();
+            } else {
+                throw new RuntimeException("The size of PairStack is more than 1, something wrong!");
+            }
+        } else {
+            throw ParserException.unfinishedPair();
+        }
+    }
+
+    /**
+     * Wrap Number / Symbol into single special body
+     */
+    private static MimosaType parseSingleExpr(String expStr) {
         try {
             return ConstExpr.wrap(MimosaNumber.numToVal(Integer.valueOf(expStr)));
         } catch (NumberFormatException nfe) {
-            return VarExpr.wrap(MimosaSymbol.strToSymbol(expStr));
+            MimosaSymbol symbol = MimosaSymbol.strToSymbol(expStr);
+            if(DiffExpr.TAG.equals(symbol)
+                    || IfExpr.TAG.equals(symbol)
+                    || LetExpr.TAG.equals(symbol)
+                    || SymbolExpr.TAG.equals(symbol)
+                    || ZeroPredExpr.TAG.equals(symbol)) {
+
+                return symbol;
+            } else {
+                return SymbolExpr.wrap(symbol);
+            }
         }
     }
 }

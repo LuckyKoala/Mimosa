@@ -12,14 +12,10 @@ import net.twodam.mimosa.utils.TypeUtil;
  * Created by luckykoala on 19-4-5.
  */
 public class IfExpr {
-    private static final MimosaSymbol TAG = MimosaSymbol.strToSymbol("if");
+    public static final MimosaSymbol TAG = MimosaSymbol.strToSymbol("if");
 
     public static boolean check(MimosaPair expr) {
         return TAG.equals(expr.car());
-    }
-
-    public static MimosaPair wrap(MimosaPair expr) {
-        return MimosaPair.cons(TAG, expr);
     }
 
     public static MimosaPair predicate(MimosaPair expr) {

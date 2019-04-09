@@ -1,12 +1,10 @@
 package net.twodam.mimosa.types;
 
-import net.twodam.mimosa.parser.ExtractSListException;
+import net.twodam.mimosa.parser.PairExtractorException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-
-import static net.twodam.mimosa.parser.ExtractSListException.EXTRACT_FROM_EMPTY_SLIST_MESSAGE;
 
 public class MimosaList extends MimosaPair {
     MimosaList(MimosaType car, MimosaList cdr) {
@@ -59,12 +57,12 @@ public class MimosaList extends MimosaPair {
 
         @Override
         public MimosaType car() {
-            throw new ExtractSListException(EXTRACT_FROM_EMPTY_SLIST_MESSAGE);
+            throw PairExtractorException.extractFromEmptyPair();
         }
 
         @Override
         public MimosaType cdr() {
-            throw new ExtractSListException(EXTRACT_FROM_EMPTY_SLIST_MESSAGE);
+            throw PairExtractorException.extractFromEmptyPair();
         }
 
         @Override

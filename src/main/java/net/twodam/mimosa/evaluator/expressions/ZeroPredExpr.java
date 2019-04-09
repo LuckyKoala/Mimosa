@@ -12,18 +12,14 @@ import net.twodam.mimosa.utils.TypeUtil;
  * Created by luckykoala on 19-4-5.
  */
 public class ZeroPredExpr {
-    private static final MimosaSymbol TAG = MimosaSymbol.strToSymbol("zero?");
+    public static final MimosaSymbol TAG = MimosaSymbol.strToSymbol("zero?");
 
     public static boolean check(MimosaPair expr) {
         return TAG.equals(expr.car());
     }
 
-    public static MimosaPair wrap(MimosaPair expr) {
-        return MimosaPair.cons(TAG, expr);
-    }
-
     public static MimosaPair predicate(MimosaPair expr) {
-        MimosaType val = MimosaListUtil.cdr(expr);
+        MimosaType val = MimosaListUtil.cadr(expr);
         TypeUtil.checkType(MimosaPair.class, val);
         return (MimosaPair) val;
     }
