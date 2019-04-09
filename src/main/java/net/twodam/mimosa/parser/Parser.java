@@ -80,6 +80,7 @@ public class Parser {
                     break;
 
                 case ')':
+                    if(state.isTopState()) throw ParserException.unfinishedPair();
                     //Parse remain chars
                     for(int j = i-1; j>state.startBound; j--) {
                         //Skip parsed chars

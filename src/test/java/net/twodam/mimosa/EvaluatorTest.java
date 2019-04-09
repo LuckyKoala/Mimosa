@@ -1,4 +1,4 @@
-package net.twodam.mimosa.parser;
+package net.twodam.mimosa;
 
 import net.twodam.mimosa.evaluator.Enviroment;
 import net.twodam.mimosa.types.MimosaBool;

@@ -1,4 +1,4 @@
-package net.twodam.mimosa.parser;
+package net.twodam.mimosa;
 
 import net.twodam.mimosa.evaluator.expressions.*;
 import net.twodam.mimosa.types.MimosaPair;
