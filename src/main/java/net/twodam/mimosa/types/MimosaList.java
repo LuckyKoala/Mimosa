@@ -41,10 +41,18 @@ public class MimosaList extends MimosaPair {
 
     @Override
     public String toString() {
-        if (!isNil(cdr())) {
-            return "(" + car() + " " + cdr() + ")";
+        if(isNil(cdr())) {
+            return "(" + car() + ")";
         } else {
-            return car().toString(); //not to print nil
+            return "(" + car() + " " + ((MimosaList) cdr()).toFlattenString() + ")";
+        }
+    }
+
+    private String toFlattenString() {
+        if(isNil(cdr())) {
+            return car().toString();
+        } else {
+            return car() + " " + ((MimosaList) cdr()).toFlattenString();
         }
     }
 
