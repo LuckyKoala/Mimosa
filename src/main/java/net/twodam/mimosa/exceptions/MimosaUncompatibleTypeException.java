@@ -7,8 +7,4 @@ public class MimosaUncompatibleTypeException extends MimosaException {
     public MimosaUncompatibleTypeException(String message) {
         super(message);
     }
-
-    public MimosaUncompatibleTypeException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

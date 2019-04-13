@@ -51,7 +51,13 @@ public class EvaluatorTest {
 
     @Test
     public void letExpr() {
-        MimosaType expr = parse("(let (y 0) (if (zero? y) 1 0))");
+        MimosaType expr = parse("(let (y 0) y)");
+        assertEquals(numToVal(0), eval(expr, Enviroment.empty()));
+    }
+
+    @Test
+    public void lambdaExpr() {
+        MimosaType expr = parse("((lambda y (- y 1)) 2)");
         assertEquals(numToVal(1), eval(expr, Enviroment.empty()));
     }
 

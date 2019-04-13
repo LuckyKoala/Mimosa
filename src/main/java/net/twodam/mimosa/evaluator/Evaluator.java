@@ -1,11 +1,9 @@
 package net.twodam.mimosa.evaluator;
 
-import net.twodam.mimosa.evaluator.expressions.DiffExpr;
-import net.twodam.mimosa.evaluator.expressions.IfExpr;
-import net.twodam.mimosa.evaluator.expressions.LetExpr;
-import net.twodam.mimosa.evaluator.expressions.ZeroPredExpr;
+import net.twodam.mimosa.evaluator.expressions.*;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.*;
+import net.twodam.mimosa.utils.MimosaListUtil;
 import net.twodam.mimosa.utils.TypeUtil;
 
 /**
@@ -48,9 +46,15 @@ public class Evaluator {
                     eval(LetExpr.bindingValue(expr), env));
             MimosaType body = LetExpr.body(expr);
             return eval(body, extendedEnv);
+        } else if(ApplicationExpr.check(expr)) {
+            MimosaPair lambdaExpr = ApplicationExpr.lambdaExpr(expr);
+            MimosaType valueExpr = ApplicationExpr.valueExpr(expr);
+            Enviroment extendedEnv = Enviroment.extend(env,
+                    LambdaExpr.parameter(lambdaExpr),
+                    eval(valueExpr, env));
+            return eval(LambdaExpr.body(lambdaExpr), extendedEnv);
         }
-        else {
-            throw MimosaEvaluatorException.unsupportedSyntax(expr);
-        }
+
+        throw MimosaEvaluatorException.unsupportedSyntax(expr);
     }
 }

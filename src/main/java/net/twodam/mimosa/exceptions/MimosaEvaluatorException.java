@@ -8,7 +8,7 @@ import net.twodam.mimosa.types.MimosaType;
 public class MimosaEvaluatorException extends MimosaException {
     private static final String UNSUPPORTED_SYNTAX = "Unsupported syntax: %s";
 
-    public MimosaEvaluatorException(String message) {
+    private MimosaEvaluatorException(String message) {
         super(message);
     }
 

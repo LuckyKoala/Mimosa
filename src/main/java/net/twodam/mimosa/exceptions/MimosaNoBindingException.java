@@ -8,7 +8,7 @@ import net.twodam.mimosa.types.MimosaSymbol;
 public class MimosaNoBindingException extends MimosaException {
     private static final String NO_BINDING_TEMPLATE = "Can't find the binding of symbol %s";
 
-    public MimosaNoBindingException(String message) {
+    private MimosaNoBindingException(String message) {
         super(message);
     }
 
