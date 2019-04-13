@@ -63,7 +63,7 @@ public class Parser {
      * '.' indicates a pair which combines exactly two values
      * @return
      */
-    public static MimosaPair parse(String data) {
+    public static MimosaType parse(String data) {
         StringBuilder tokenBuilder = new StringBuilder();
         State state = State.topStateOf(0);
 
@@ -136,7 +136,7 @@ public class Parser {
         if(state.isTopState()) {
             int parsedExprStackSize = state.parsedExprStack.size();
             if(parsedExprStackSize == 0) {
-                return (MimosaPair) parseSingleExpr(data);
+                return parseSingleExpr(data);
             } else if(parsedExprStackSize == 1) {
                 return state.parsedExprStack.pop();
             } else {
@@ -152,19 +152,9 @@ public class Parser {
      */
     private static MimosaType parseSingleExpr(String expStr) {
         try {
-            return ConstExpr.wrap(MimosaNumber.numToVal(Integer.valueOf(expStr)));
+            return MimosaNumber.numToVal(Integer.valueOf(expStr));
         } catch (NumberFormatException nfe) {
-            MimosaSymbol symbol = MimosaSymbol.strToSymbol(expStr);
-            if(DiffExpr.TAG.equals(symbol)
-                    || IfExpr.TAG.equals(symbol)
-                    || LetExpr.TAG.equals(symbol)
-                    || SymbolExpr.TAG.equals(symbol)
-                    || ZeroPredExpr.TAG.equals(symbol)) {
-
-                return symbol;
-            } else {
-                return SymbolExpr.wrap(symbol);
-            }
+            return MimosaSymbol.strToSymbol(expStr);
         }
     }
 }

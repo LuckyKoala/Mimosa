@@ -4,7 +4,6 @@ import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;
-import net.twodam.mimosa.utils.TypeUtil;
 
 /**
  * (zero? s)
@@ -18,9 +17,7 @@ public class ZeroPredExpr {
         return TAG.equals(expr.car());
     }
 
-    public static MimosaPair predicate(MimosaPair expr) {
-        MimosaType val = MimosaListUtil.cadr(expr);
-        TypeUtil.checkType(MimosaPair.class, val);
-        return (MimosaPair) val;
+    public static MimosaType predicate(MimosaPair expr) {
+        return MimosaListUtil.cadr(expr);
     }
 }

@@ -1,5 +1,7 @@
 package net.twodam.mimosa.utils;
 
+import net.twodam.mimosa.types.MimosaNumber;
+import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.types.UncompatibleTypeException;
 
@@ -10,6 +12,14 @@ import java.util.function.Function;
  */
 public class TypeUtil {
     private static final String UNCOMPATIBLE_TYPE_MESSAGE_TEMPLATE = "%s is not a instance of type [%s]";
+
+    public static boolean isNumber(MimosaType val) {
+        return isCompatibleType(MimosaNumber.class, val);
+    }
+
+    public static boolean isSymbol(MimosaType val) {
+        return isCompatibleType(MimosaSymbol.class, val);
+    }
 
     public static boolean isCompatibleType(Class clazz, MimosaType val) {
         return clazz.isInstance(val);

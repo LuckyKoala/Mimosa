@@ -9,26 +9,29 @@ import net.twodam.mimosa.utils.TypeUtil;
  * lambda
  */
 public class Evaluator {
-    public static MimosaType eval(MimosaPair expr, Enviroment env) {
-        if(ConstExpr.check(expr)) {
-            return ConstExpr.constant(expr);
+    public static MimosaType eval(MimosaType val, Enviroment env) {
+        if (TypeUtil.isNumber(val)) {
+            return val;
+        } else if (TypeUtil.isSymbol(val)) {
+            return Enviroment.search(env, (MimosaSymbol) val);
         }
-        else if(SymbolExpr.check(expr)) {
-            return Enviroment.search(env, SymbolExpr.symbol(expr));
-        }
-        else if(DiffExpr.check(expr)) {
+
+        TypeUtil.checkType(MimosaPair.class, val);
+        MimosaPair expr = (MimosaPair) val;
+
+        if(DiffExpr.check(expr)) {
             MimosaType val1 = eval(DiffExpr.exp1(expr), env);
             MimosaType val2 = eval(DiffExpr.exp2(expr), env);
             return MimosaNumber.substract((MimosaVal) val1, (MimosaVal) val2);
         }
         else if(ZeroPredExpr.check(expr)) {
-            MimosaType val = eval(ZeroPredExpr.predicate(expr), env);
-            TypeUtil.checkType(MimosaNumber.class, val);
-            return MimosaNumber.isZero((MimosaVal) val) ?
+            MimosaType ret = eval(ZeroPredExpr.predicate(expr), env);
+            TypeUtil.checkType(MimosaNumber.class, ret);
+            return MimosaNumber.isZero((MimosaVal) ret) ?
                     MimosaBool.TRUE : MimosaBool.FALSE;
         }
         else if(IfExpr.check(expr)) {
-            MimosaPair predicate = IfExpr.predicate(expr);
+            MimosaType predicate = IfExpr.predicate(expr);
             if(MimosaBool.isTrue(eval(predicate, env))) {
                 return eval(IfExpr.trueExpr(expr), env);
             } else {
@@ -39,7 +42,7 @@ public class Evaluator {
             Enviroment extendedEnv = Enviroment.extend(env,
                     LetExpr.bindingKey(expr),
                     eval(LetExpr.bindingValue(expr), env));
-            MimosaPair body = LetExpr.body(expr);
+            MimosaType body = LetExpr.body(expr);
             return eval(body, extendedEnv);
         }
         else {

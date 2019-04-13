@@ -4,7 +4,6 @@ import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;
-import net.twodam.mimosa.utils.TypeUtil;
 
 /**
  * (- exp1 exp2)
@@ -18,15 +17,11 @@ public class DiffExpr {
         return TAG.equals(expr.car());
     }
 
-    public static MimosaPair exp1(MimosaPair expr) {
-        MimosaType val = MimosaListUtil.cadr(expr);
-        TypeUtil.checkType(MimosaPair.class, val);
-        return (MimosaPair) val;
+    public static MimosaType exp1(MimosaPair expr) {
+        return MimosaListUtil.cadr(expr);
     }
 
-    public static MimosaPair exp2(MimosaPair expr) {
-        MimosaType val = MimosaListUtil.caddr(expr);
-        TypeUtil.checkType(MimosaPair.class, val);
-        return (MimosaPair) val;
+    public static MimosaType exp2(MimosaPair expr) {
+        return MimosaListUtil.caddr(expr);
     }
 }

@@ -20,25 +20,18 @@ public class LetExpr {
 
     public static MimosaSymbol bindingKey(MimosaPair expr) {
         MimosaType val = MimosaListUtil.caadr(expr);
-        TypeUtil.checkType(MimosaPair.class, val);
-        MimosaPair symbolExpr = (MimosaPair) val;
-
-        if(SymbolExpr.check(symbolExpr)) {
-            return SymbolExpr.symbol(symbolExpr);
+        if(TypeUtil.isCompatibleType(MimosaSymbol.class, val)) {
+            return (MimosaSymbol) val;
         } else {
-            throw MimosaIllegalExprException.nonSymbolInLet(symbolExpr);
+            throw MimosaIllegalExprException.nonSymbolInLet(expr);
         }
     }
 
-    public static MimosaPair bindingValue(MimosaPair expr) {
-        MimosaType val = MimosaListUtil.cadadr(expr);
-        TypeUtil.checkType(MimosaPair.class, val);
-        return (MimosaPair) val;
+    public static MimosaType bindingValue(MimosaPair expr) {
+        return MimosaListUtil.cadadr(expr);
     }
 
-    public static MimosaPair body(MimosaPair expr) {
-        MimosaType val = MimosaListUtil.caddr(expr);
-        TypeUtil.checkType(MimosaPair.class, val);
-        return (MimosaPair) val;
+    public static MimosaType body(MimosaPair expr) {
+        return MimosaListUtil.caddr(expr);
     }
 }
