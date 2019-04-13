@@ -61,6 +61,17 @@ public class EvaluatorTest {
         assertEquals(numToVal(1), eval(expr, Enviroment.empty()));
     }
 
+    @Test
+    public void lambdaInLet() {
+        assertEquals(numToVal(55),
+                eval(parse("(let (f (lambda x (- x 11))) " +
+                        "(f (f 77)))"), Enviroment.empty()));
+
+        assertEquals(numToVal(55),
+                eval(parse("((lambda f (f (f 77))) " +
+                        "(lambda x (- x 11)))"), Enviroment.empty()));
+    }
+
 //    @Test(expected = )
 //    public void otherExpr() {
 //        String data = "";

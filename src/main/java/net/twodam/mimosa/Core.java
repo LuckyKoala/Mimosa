@@ -21,11 +21,13 @@ public class Core {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        scanner.useDelimiter("\n\n");
         String input;
 
         do {
             System.out.println(PROMFT);
-            input = scanner.nextLine();
+            input = scanner.next();
+            input = input.replace('\n', ' ');
             if(input.equalsIgnoreCase("exit")) {
                 System.out.println("Bye :)");
                 break;
