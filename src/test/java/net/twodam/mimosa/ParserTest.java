@@ -1,6 +1,9 @@
 package net.twodam.mimosa;
 
-import net.twodam.mimosa.evaluator.expressions.*;
+import net.twodam.mimosa.evaluator.expressions.DiffExpr;
+import net.twodam.mimosa.evaluator.expressions.IfExpr;
+import net.twodam.mimosa.evaluator.expressions.LetExpr;
+import net.twodam.mimosa.evaluator.expressions.ZeroPredExpr;
 import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.TypeUtil;

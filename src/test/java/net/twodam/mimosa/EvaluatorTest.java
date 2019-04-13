@@ -1,7 +1,10 @@
 package net.twodam.mimosa;
 
 import net.twodam.mimosa.evaluator.Enviroment;
-import net.twodam.mimosa.types.*;
+import net.twodam.mimosa.types.MimosaBool;
+import net.twodam.mimosa.types.MimosaNumber;
+import net.twodam.mimosa.types.MimosaSymbol;
+import net.twodam.mimosa.types.MimosaType;
 import org.junit.Test;
 
 import static net.twodam.mimosa.evaluator.Evaluator.eval;
@@ -15,15 +18,13 @@ import static org.junit.Assert.assertEquals;
 public class EvaluatorTest {
     @Test
     public void constExpr() {
-        String data = "1";
-        MimosaType expr = parse(data);
+        MimosaType expr = parse("1");
         assertEquals(numToVal(1), eval(expr, Enviroment.empty()));
     }
 
     @Test
     public void symbolExpr() {
-        String data = "x";
-        MimosaType expr = parse(data);
+        MimosaType expr = parse("x");
         assertEquals(numToVal(1), eval(expr,
                 Enviroment.extend(Enviroment.empty(),
                         MimosaSymbol.strToSymbol("x"),
@@ -32,29 +33,25 @@ public class EvaluatorTest {
 
     @Test
     public void diffExpr() {
-        String data = "(- 2 1)";
-        MimosaType expr = parse(data);
+        MimosaType expr = parse("(- 2 1)");
         assertEquals(numToVal(1), eval(expr, Enviroment.empty()));
     }
 
     @Test
     public void zeroPredExpr() {
-        String data = "(zero? 1)";
-        MimosaType expr = parse(data);
+        MimosaType expr = parse("(zero? 1)");
         assertEquals(MimosaBool.FALSE, eval(expr, Enviroment.empty()));
     }
 
     @Test
     public void ifExpr() {
-        String data = "(if (zero? 0) 1 0)";
-        MimosaType expr = parse(data);
+        MimosaType expr = parse("(if (zero? 0) 1 0)");
         assertEquals(numToVal(1), eval(expr, Enviroment.empty()));
     }
 
     @Test
     public void letExpr() {
-        String data = "(let (y 0) (if (zero? y) 1 0))";
-        MimosaType expr = parse(data);
+        MimosaType expr = parse("(let (y 0) (if (zero? y) 1 0))");
         assertEquals(numToVal(1), eval(expr, Enviroment.empty()));
     }
 

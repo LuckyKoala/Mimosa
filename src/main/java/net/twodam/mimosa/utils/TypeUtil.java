@@ -1,9 +1,9 @@
 package net.twodam.mimosa.utils;
 
+import net.twodam.mimosa.exceptions.MimosaUncompatibleTypeException;
 import net.twodam.mimosa.types.MimosaNumber;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
-import net.twodam.mimosa.types.UncompatibleTypeException;
 
 import java.util.function.Function;
 
@@ -27,16 +27,16 @@ public class TypeUtil {
 
     public static void checkType(Class clazz, MimosaType val) {
         if(!isCompatibleType(clazz, val))
-            throw new UncompatibleTypeException(String.format(UNCOMPATIBLE_TYPE_MESSAGE_TEMPLATE, val, clazz.getSimpleName()));
+            throw new MimosaUncompatibleTypeException(String.format(UNCOMPATIBLE_TYPE_MESSAGE_TEMPLATE, val, clazz.getSimpleName()));
     }
 
     public static void checkType(Class clazz, MimosaType val, String message) {
         if(!isCompatibleType(clazz, val))
-            throw new UncompatibleTypeException(message);
+            throw new MimosaUncompatibleTypeException(message);
     }
 
     public static void checkType(Class clazz, MimosaType val, Function<MimosaType, String> messageMapper) {
         if(!isCompatibleType(clazz, val))
-            throw new UncompatibleTypeException(messageMapper.apply(val));
+            throw new MimosaUncompatibleTypeException(messageMapper.apply(val));
     }
 }

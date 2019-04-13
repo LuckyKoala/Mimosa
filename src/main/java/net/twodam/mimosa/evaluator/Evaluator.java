@@ -1,6 +1,10 @@
 package net.twodam.mimosa.evaluator;
 
-import net.twodam.mimosa.evaluator.expressions.*;
+import net.twodam.mimosa.evaluator.expressions.DiffExpr;
+import net.twodam.mimosa.evaluator.expressions.IfExpr;
+import net.twodam.mimosa.evaluator.expressions.LetExpr;
+import net.twodam.mimosa.evaluator.expressions.ZeroPredExpr;
+import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.*;
 import net.twodam.mimosa.utils.TypeUtil;
 
@@ -46,7 +50,7 @@ public class Evaluator {
             return eval(body, extendedEnv);
         }
         else {
-            throw new RuntimeException("Unsupported syntax: " + expr);
+            throw MimosaEvaluatorException.unsupportedSyntax(expr);
         }
     }
 }

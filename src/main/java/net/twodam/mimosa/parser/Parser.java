@@ -1,6 +1,6 @@
 package net.twodam.mimosa.parser;
 
-import net.twodam.mimosa.evaluator.expressions.*;
+import net.twodam.mimosa.exceptions.MimosaParserException;
 import net.twodam.mimosa.types.*;
 
 import java.util.Stack;
@@ -42,7 +42,7 @@ public class Parser {
                 if(tokenStack.size() == 2) {
                     upperState.parsedExprStack.push(MimosaPair.cons(tokenStack.pop(), tokenStack.pop()));
                 } else {
-                    throw ParserException.notExactlyTwoValuesInPair(tokenStack.size());
+                    throw MimosaParserException.notExactlyTwoValuesInPair(tokenStack.size());
                 }
             } else {
                 upperState.parsedExprStack.push(MimosaList.list(tokenStack));
@@ -75,12 +75,12 @@ public class Parser {
                     if(tokenBuilder.length() == 0) {
                         state = state.nextState(i); //new state for deeper depth
                     } else {
-                        throw ParserException.listCharInVal();
+                        throw MimosaParserException.listCharInVal();
                     }
                     break;
 
                 case ')':
-                    if(state.isTopState()) throw ParserException.unfinishedPair();
+                    if(state.isTopState()) throw MimosaParserException.unfinishedPair();
                     //Parse remain chars
                     for(int j = i-1; j>state.startBound; j--) {
                         //Skip parsed chars
@@ -107,7 +107,7 @@ public class Parser {
                                 if (!state.pairDotPresent) {
                                     state.pairDotPresent = true;
                                 } else {
-                                    throw ParserException.multiDotInPair();
+                                    throw MimosaParserException.multiDotInPair();
                                 }
                                 break;
                             case ' ':
@@ -143,7 +143,7 @@ public class Parser {
                 throw new RuntimeException("The size of PairStack is more than 1, something wrong!");
             }
         } else {
-            throw ParserException.unfinishedPair();
+            throw MimosaParserException.unfinishedPair();
         }
     }
 
