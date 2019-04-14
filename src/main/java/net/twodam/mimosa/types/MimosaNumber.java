@@ -12,6 +12,10 @@ public class MimosaNumber extends MimosaVal {
         super(number);
     }
 
+    public static MimosaNumber negative(MimosaType mimosaType) {
+        return numToVal(-valToNum(mimosaType));
+    }
+
     public static MimosaNumber numToVal(int number) {
         return new MimosaNumber(number);
     }
@@ -21,13 +25,13 @@ public class MimosaNumber extends MimosaVal {
         return (int) ((MimosaNumber)mimosaVal).val;
     }
 
-    public static boolean isZero(MimosaVal mimosaVal) {
-        return ZERO.equals(mimosaVal);
+    public static boolean isZero(MimosaType val) {
+        return ZERO.equals(val);
     }
 
-    public static MimosaNumber substract(MimosaVal val1, MimosaVal val2) {
+    public static MimosaNumber add(MimosaType val1, MimosaType val2) {
         int num1 = valToNum(val1);
         int num2 = valToNum(val2);
-        return numToVal(num1 - num2);
+        return numToVal(num1 + num2);
     }
 }

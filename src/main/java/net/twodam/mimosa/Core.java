@@ -1,6 +1,5 @@
 package net.twodam.mimosa;
 
-import net.twodam.mimosa.evaluator.Enviroment;
 import net.twodam.mimosa.exceptions.MimosaException;
 import net.twodam.mimosa.types.MimosaType;
 
@@ -35,7 +34,7 @@ public class Core {
 
             try {
                 MimosaType parsedExpr = parse(input);
-                System.out.println(eval(parsedExpr, Enviroment.empty()));
+                System.out.println(eval(parsedExpr));
             } catch (MimosaException e) {
                 System.out.println(ERROR + e.getMessage());
             }

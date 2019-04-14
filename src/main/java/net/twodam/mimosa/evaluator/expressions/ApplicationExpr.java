@@ -5,7 +5,7 @@ import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;
 
 /**
- * (lambdaExpr valueExpr)
+ * (function params)
  *
  * Created by luckykoala on 19-4-13.
  */
@@ -14,11 +14,11 @@ public class ApplicationExpr {
         return true;
     }
 
-    public static MimosaType lambdaExpr(MimosaPair expr) {
+    public static MimosaType function(MimosaPair expr) {
         return MimosaListUtil.car(expr);
     }
 
-    public static MimosaType valueExpr(MimosaPair expr) {
-        return MimosaListUtil.cadr(expr);
+    public static MimosaType params(MimosaPair expr) {
+        return MimosaListUtil.cdr(expr);
     }
 }

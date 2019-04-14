@@ -1,8 +1,12 @@
 package net.twodam.mimosa.evaluator;
 
-import net.twodam.mimosa.evaluator.expressions.*;
+import net.twodam.mimosa.evaluator.expressions.ApplicationExpr;
+import net.twodam.mimosa.evaluator.expressions.IfExpr;
+import net.twodam.mimosa.evaluator.expressions.LambdaExpr;
+import net.twodam.mimosa.evaluator.expressions.LetExpr;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.*;
+import net.twodam.mimosa.utils.MimosaListUtil;
 import net.twodam.mimosa.utils.TypeUtil;
 
 /**
@@ -10,28 +14,21 @@ import net.twodam.mimosa.utils.TypeUtil;
  * lambda
  */
 public class Evaluator {
-    public static MimosaType eval(MimosaType val, Enviroment env) {
+    public static MimosaType eval(MimosaType val) {
+        return eval(val, MimosaRuntime.baseEnvironment);
+    }
+
+    public static MimosaType eval(MimosaType val, Environment env) {
         if (TypeUtil.isNumber(val)) {
             return val;
         } else if (TypeUtil.isSymbol(val)) {
-            return Enviroment.search(env, (MimosaSymbol) val);
+            return Environment.search(env, (MimosaSymbol) val);
         }
 
         TypeUtil.checkType(MimosaPair.class, val);
         MimosaPair expr = (MimosaPair) val;
 
-        if(DiffExpr.check(expr)) {
-            MimosaType val1 = eval(DiffExpr.exp1(expr), env);
-            MimosaType val2 = eval(DiffExpr.exp2(expr), env);
-            return MimosaNumber.substract((MimosaVal) val1, (MimosaVal) val2);
-        }
-        else if(ZeroPredExpr.check(expr)) {
-            MimosaType ret = eval(ZeroPredExpr.predicate(expr), env);
-            TypeUtil.checkType(MimosaNumber.class, ret);
-            return MimosaNumber.isZero((MimosaVal) ret) ?
-                    MimosaBool.TRUE : MimosaBool.FALSE;
-        }
-        else if(IfExpr.check(expr)) {
+        if(IfExpr.check(expr)) {
             MimosaType predicate = IfExpr.predicate(expr);
             if(MimosaBool.isTrue(eval(predicate, env))) {
                 return eval(IfExpr.trueExpr(expr), env);
@@ -40,25 +37,37 @@ public class Evaluator {
             }
         }
         else if(LetExpr.check(expr)) {
-            Enviroment extendedEnv = Enviroment.extend(env,
+            Environment extendedEnv = Environment.extend(env,
                     LetExpr.bindingKey(expr),
                     eval(LetExpr.bindingValue(expr), env));
             MimosaType body = LetExpr.body(expr);
             return eval(body, extendedEnv);
         } else if(LambdaExpr.check(expr)) {
-            return MimosaClosure.wrap(expr, env);
+            return MimosaFunction.wrap(expr, env);
         } else if(ApplicationExpr.check(expr)) {
-            MimosaType evaluatedExpr = eval(ApplicationExpr.lambdaExpr(expr), env);
-            if(TypeUtil.isCompatibleType(MimosaClosure.class, evaluatedExpr)) {
-                MimosaClosure lambdaClosure = (MimosaClosure) evaluatedExpr;
-                MimosaType valueExpr = ApplicationExpr.valueExpr(expr);
-                Enviroment extendedEnv = Enviroment.extend(lambdaClosure.savedEnv(),
-                        LambdaExpr.parameter(lambdaClosure.lambdaExpr()),
-                        eval(valueExpr, env));
-                return eval(LambdaExpr.body(lambdaClosure.lambdaExpr()), extendedEnv);
-            }
+            return apply(expr, env);
         }
 
         throw MimosaEvaluatorException.unsupportedSyntax(expr);
+    }
+
+    public static MimosaType apply(MimosaPair expr, Environment env) {
+        MimosaType functionExpr = eval(ApplicationExpr.function(expr), env);
+
+        if(TypeUtil.isCompatibleType(MimosaPrimitiveFunction.class, functionExpr)) {
+            //primitive function?
+            return MimosaRuntime.applyPrimitive(((MimosaPrimitiveFunction) functionExpr).primitiveSymbol(),
+                    ApplicationExpr.params(expr), env);
+        } else if(TypeUtil.isCompatibleType(MimosaFunction.class, functionExpr)) {
+            //defined function?
+            MimosaFunction lambdaClosure = (MimosaFunction) functionExpr;
+            MimosaType valueExpr = ApplicationExpr.params(expr);
+            Environment extendedEnv = Environment.extend(lambdaClosure.savedEnv(),
+                    LambdaExpr.params(lambdaClosure.lambdaExpr()),
+                    MimosaListUtil.map(valExpr -> eval(valExpr, env), valueExpr));
+            return eval(LambdaExpr.body(lambdaClosure.lambdaExpr()), extendedEnv);
+        } else {
+            throw MimosaEvaluatorException.unknownFunction(functionExpr);
+        }
     }
 }

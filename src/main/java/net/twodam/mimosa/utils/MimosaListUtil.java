@@ -7,7 +7,14 @@ import net.twodam.mimosa.types.MimosaNumber;
 import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaType;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import static net.twodam.mimosa.types.MimosaList.isNil;
+import static net.twodam.mimosa.types.MimosaList.list;
 import static net.twodam.mimosa.utils.MimosaListUtil.ChainHelper.wrap;
 import static net.twodam.mimosa.utils.TypeUtil.checkType;
 
@@ -59,6 +66,38 @@ public class MimosaListUtil {
     /*public static MimosaList append(MimosaList a, MimosaList b) {
         //
     }*/
+
+    //=========== List Iteration ===========
+    //ref: https://docs.racket-lang.org/reference/pairs.html#%28part._.List_.Iteration%29
+    public static MimosaList map(Function<MimosaType, MimosaType> mapper, MimosaType list) {
+        checkType(MimosaList.class, list);
+
+        List<MimosaType> tmpList = new ArrayList<>();
+        while(!isNil(list)) {
+            tmpList.add(mapper.apply(car(list)));
+            list = cdr(list);
+        }
+        return list(tmpList);
+    }
+
+    public static void foreach(Consumer<MimosaType> consumer, MimosaType list) {
+        checkType(MimosaList.class, list);
+
+        while(!isNil(list)) {
+            consumer.accept(car(list));
+            list = cdr(list);
+        }
+    }
+
+    public static MimosaType foldl(BiFunction<MimosaType, MimosaType, MimosaType> biFunction, MimosaType init, MimosaType list) {
+        checkType(MimosaList.class, list);
+        MimosaType ret = init;
+        while(!isNil(list)) {
+            ret = biFunction.apply(car(list), ret);
+            list = cdr(list);
+        }
+        return ret;
+    }
 
     //=========== Cadr shorthand functions ===========
 
