@@ -65,11 +65,22 @@ public class EvaluatorTest {
     public void lambdaInLet() {
         assertEquals(numToVal(55),
                 eval(parse("(let (f (lambda x (- x 11))) " +
-                        "(f (f 77)))"), Enviroment.empty()));
+                        "           (f (f 77)))"), Enviroment.empty()));
 
         assertEquals(numToVal(55),
                 eval(parse("((lambda f (f (f 77))) " +
-                        "(lambda x (- x 11)))"), Enviroment.empty()));
+                        "         (lambda x (- x 11)))"), Enviroment.empty()));
+    }
+
+    @Test
+    public void lexicalScope() {
+        MimosaType parsedExpr = parse("(let (x 200)" +
+                "           (let (f (lambda z (- z x)))" +
+                "              (let (x 100)" +
+                "                 (let (g (lambda z (- z x)))" +
+                "                    (- (f 1) (g 1))))))");
+        MimosaType evaluatedExpr = eval(parsedExpr, Enviroment.empty());
+        assertEquals(numToVal(-100), evaluatedExpr);
     }
 
 //    @Test(expected = )

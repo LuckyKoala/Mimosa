@@ -72,7 +72,10 @@ public class ParserTest {
 
     @Test
     public void expressions() {
-        String testStr = "(let (y 1) (if (zero? (- y 1)) 1 0))";
+        String testStr = "(let (y 1) " +
+                "            (if (zero? (- y 1))" +
+                "               1 " +
+                "               0))";
 
         MimosaType tempExpr = parse(testStr);
         assertTrue(TypeUtil.isCompatibleType(MimosaPair.class, tempExpr));

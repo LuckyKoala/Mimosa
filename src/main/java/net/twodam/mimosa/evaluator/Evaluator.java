@@ -46,16 +46,16 @@ public class Evaluator {
             MimosaType body = LetExpr.body(expr);
             return eval(body, extendedEnv);
         } else if(LambdaExpr.check(expr)) {
-            return expr;
+            return MimosaClosure.wrap(expr, env);
         } else if(ApplicationExpr.check(expr)) {
             MimosaType evaluatedExpr = eval(ApplicationExpr.lambdaExpr(expr), env);
-            if(TypeUtil.isCompatibleType(MimosaPair.class, evaluatedExpr)) {
-                MimosaPair lambdaExpr = (MimosaPair) evaluatedExpr;
+            if(TypeUtil.isCompatibleType(MimosaClosure.class, evaluatedExpr)) {
+                MimosaClosure lambdaClosure = (MimosaClosure) evaluatedExpr;
                 MimosaType valueExpr = ApplicationExpr.valueExpr(expr);
-                Enviroment extendedEnv = Enviroment.extend(env,
-                        LambdaExpr.parameter(lambdaExpr),
+                Enviroment extendedEnv = Enviroment.extend(lambdaClosure.savedEnv(),
+                        LambdaExpr.parameter(lambdaClosure.lambdaExpr()),
                         eval(valueExpr, env));
-                return eval(LambdaExpr.body(lambdaExpr), extendedEnv);
+                return eval(LambdaExpr.body(lambdaClosure.lambdaExpr()), extendedEnv);
             }
         }
 
