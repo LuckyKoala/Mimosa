@@ -6,6 +6,9 @@ import net.twodam.mimosa.utils.TypeUtil;
  * Created by luckykoala on 19-4-5.
  */
 public class MimosaBool extends MimosaVal {
+    public static final MimosaSymbol TRUE_SYM = MimosaSymbol.strToSymbol("#t");
+    public static final MimosaSymbol FALSE_SYM = MimosaSymbol.strToSymbol("#f");
+
     public static final MimosaBool TRUE = new MimosaBool(true);
     public static final MimosaBool FALSE = new MimosaBool(false);
 
@@ -23,6 +26,10 @@ public class MimosaBool extends MimosaVal {
     }
 
     public static boolean isTrue(MimosaType val) {
+        if(TypeUtil.isCompatibleType(MimosaSymbol.class, val)) {
+            return val.equals(TRUE_SYM);
+        }
+
         TypeUtil.checkType(MimosaBool.class, val);
         return TRUE==val;
     }

@@ -6,8 +6,9 @@ import net.twodam.mimosa.evaluator.expressions.LambdaExpr;
 import net.twodam.mimosa.evaluator.expressions.LetExpr;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.*;
-import net.twodam.mimosa.utils.MimosaListUtil;
 import net.twodam.mimosa.utils.TypeUtil;
+
+import static net.twodam.mimosa.utils.MimosaListUtil.map;
 
 /**
  * enviroment
@@ -23,6 +24,9 @@ public class Evaluator {
             return val;
         } else if (TypeUtil.isSymbol(val)) {
             return Environment.search(env, (MimosaSymbol) val);
+        } else if (TypeUtil.isCompatibleType(MimosaPrimitiveFunction.class, val)
+                || TypeUtil.isCompatibleType(MimosaFunction.class, val)) {
+            return val;
         }
 
         TypeUtil.checkType(MimosaPair.class, val);
@@ -64,7 +68,7 @@ public class Evaluator {
             MimosaType valueExpr = ApplicationExpr.params(expr);
             Environment extendedEnv = Environment.extend(lambdaClosure.savedEnv(),
                     LambdaExpr.params(lambdaClosure.lambdaExpr()),
-                    MimosaListUtil.map(valExpr -> eval(valExpr, env), valueExpr));
+                    map(valExpr -> eval(valExpr, env), valueExpr));
             return eval(LambdaExpr.body(lambdaClosure.lambdaExpr()), extendedEnv);
         } else {
             throw MimosaEvaluatorException.unknownFunction(functionExpr);
