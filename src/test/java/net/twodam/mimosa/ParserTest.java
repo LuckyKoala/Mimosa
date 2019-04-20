@@ -3,10 +3,10 @@ package net.twodam.mimosa;
 import net.twodam.mimosa.types.MimosaType;
 import org.junit.Test;
 
-import static java.util.Arrays.asList;
 import static net.twodam.mimosa.parser.Parser.parse;
 import static net.twodam.mimosa.types.MimosaList.list;
 import static net.twodam.mimosa.types.MimosaNumber.numToVal;
+import static net.twodam.mimosa.types.MimosaPair.cons;
 import static net.twodam.mimosa.types.MimosaSymbol.strToSymbol;
 import static net.twodam.mimosa.utils.MimosaListUtil.*;
 import static org.junit.Assert.assertEquals;
@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 public class ParserTest {
     //====== Number and Symbol ======
     @Test
-    public void number() {
+    public void primitive() {
         assertEquals(numToVal(134), parse("134"));
         assertEquals(numToVal(+134), parse("+134"));
         assertEquals(numToVal(-134), parse("-134"));
@@ -27,39 +27,30 @@ public class ParserTest {
     //====== Pair and list ======
     @Test
     public void pair() {
-        MimosaType expr = parse("(a . 3)");
+        MimosaType expect = cons(strToSymbol("a"), numToVal(3));
+        MimosaType actual = parse("(a . 3)");
 
-        assertEquals(strToSymbol("a"), car(expr));
-        assertEquals(numToVal(3), cdr(expr));
+        assertEquals(expect, actual);
+        assertEquals(strToSymbol("a"), car(actual));
+        assertEquals(numToVal(3), cdr(actual));
+    }
+
+    @Test
+    public void listTest() {
+        MimosaType expect = list(list(numToVal(1)),
+                numToVal(2),
+                list(numToVal(3), list(numToVal(4))));
+        MimosaType actual = parse("((1) 2 (3 (4)))");
+
+        assertEquals(expect, actual);
     }
 
     @Test
     public void listOperations() {
-        MimosaType expr = parse("(a . b)");
-        assertEquals(strToSymbol("a"), listRef(expr, numToVal(0)));
-        //assertEquals(SymbolExpr.TAG, listRef(pair, numToVal(1)));
-
-        MimosaType list = parse("(1 2 3 4 (5 6))");
-        assertEquals(numToVal(5), length(list));
+        MimosaType list = parse("(1 2 3 4 (5 6) 7)");
+        assertEquals(numToVal(6), length(list));
         assertEquals(numToVal(2), length(car(cddddr(list))));
-        assertEquals(
-                list(asList(numToVal(1),
-                        numToVal(2),
-                        numToVal(3),
-                        numToVal(4),
-                        list(asList(numToVal(5), numToVal(6)))))
-                , list);
-    }
-
-    @Test
-    public void pairExtractor() {
-        String lambdaStr = "(lambda (point) (+ point 1))";
-        MimosaType expr = parse(lambdaStr);
-
-        assertEquals(strToSymbol("lambda"), car(expr));
-        assertEquals(strToSymbol("point"), caadr(expr));
-        assertEquals(strToSymbol("+"), car(caddr(expr)));
-        assertEquals(strToSymbol("point"), cadr(caddr(expr)));
-        assertEquals(numToVal(1), caddr(caddr(expr)));
+        assertEquals(list(numToVal(5), numToVal(6))
+                , listRef(list, numToVal(4)));
     }
 }

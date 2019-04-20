@@ -8,48 +8,42 @@ import java.util.Stack;
 public class Parser {
     static class State {
         State upperState;
-        int startBound; //index of '('
-        int parsedStart;
-        int parsedEnd;
         boolean pairDotPresent;
         Stack<MimosaType> tokenStack;
-        Stack<MimosaPair> parsedExprStack;
 
-        private State(State upperState, int startBound) {
+        private State(State upperState) {
             this.upperState = upperState;
-            this.startBound = startBound;
-            this.parsedStart = Integer.MAX_VALUE;
-            this.parsedEnd = startBound;
             this.pairDotPresent = false;
             this.tokenStack = new Stack<>();
-            this.parsedExprStack = new Stack<>();
         }
 
-        static State topStateOf(int startBound) {
-            return new State(null, startBound);
+        static State topState() {
+            return new State(null);
         }
 
         boolean isTopState() {
             return upperState == null;
         }
 
-        State nextState(int startBound) {
-            return new State(this, startBound);
+        State nextState() {
+            return new State(this);
         }
 
-        State mergeToUpperState(int parsedEnd) {
+        MimosaPair merge() {
             if(pairDotPresent) {
                 if(tokenStack.size() == 2) {
-                    upperState.parsedExprStack.push(MimosaPair.cons(tokenStack.pop(), tokenStack.pop()));
+                    return MimosaPair.cons(tokenStack.elementAt(0), tokenStack.elementAt(1));
                 } else {
                     throw MimosaParserException.notExactlyTwoValuesInPair(tokenStack.size());
                 }
             } else {
-                upperState.parsedExprStack.push(MimosaList.list(tokenStack));
+                return MimosaList.list(tokenStack.toArray(new MimosaType[0]));
             }
+        }
 
-            if(startBound < upperState.parsedStart) upperState.parsedStart = startBound;
-            upperState.parsedEnd = parsedEnd;
+        State mergeToUpperState() {
+            upperState.tokenStack.push(merge());
+
             return upperState;
         }
     }
@@ -65,7 +59,7 @@ public class Parser {
      */
     public static MimosaType parse(String data) {
         StringBuilder tokenBuilder = new StringBuilder();
-        State state = State.topStateOf(0);
+        State state = State.topState();
 
         for(int i=0; i<data.length(); i++) {
             char c = data.charAt(i);
@@ -73,7 +67,7 @@ public class Parser {
             switch (c) {
                 case '(':
                     if(tokenBuilder.length() == 0) {
-                        state = state.nextState(i); //new state for deeper depth
+                        state = state.nextState(); //new state for deeper depth
                     } else {
                         throw MimosaParserException.listCharInVal();
                     }
@@ -81,64 +75,43 @@ public class Parser {
 
                 case ')':
                     if(state.isTopState()) throw MimosaParserException.unfinishedPair();
-                    //Parse remain chars
-                    for(int j = i-1; j>state.startBound; j--) {
-                        //Skip parsed chars
-                        if(j == state.parsedEnd) {
-                            //Save parsed expr
-                            while(!state.parsedExprStack.empty()) {
-                                state.tokenStack.push(state.parsedExprStack.pop());
-                            }
-                            j = state.parsedStart - 1;
-                            if(j <= state.startBound) {
-                                //All chars in this level has been parsed
-                                break;
-                            }
-                        }
 
-                        char ch = data.charAt(j);
-
-                        switch (ch) {
-                            case '(':
-                            case ')':
-                                //This should never happened
-                                throw new RuntimeException("Parser error");
-                            case '.':
-                                if (!state.pairDotPresent) {
-                                    state.pairDotPresent = true;
-                                } else {
-                                    throw MimosaParserException.multiDotInPair();
-                                }
-                                break;
-                            case ' ':
-                                if(tokenBuilder.length() > 0) {
-                                    state.tokenStack.push(parseSingleExpr(tokenBuilder.reverse().toString()));
-                                    tokenBuilder.setLength(0);
-                                }
-
-                                break;
-                            default:
-                                tokenBuilder.append(ch);
-                                break;
-                        }
-                    }
                     //Push possibly remain token
                     if(tokenBuilder.length() > 0) {
-                        state.tokenStack.push(parseSingleExpr(tokenBuilder.reverse().toString()));
+                        state.tokenStack.push(parseSingleExpr(tokenBuilder.toString()));
                         tokenBuilder.setLength(0);
                     }
-                    state = state.mergeToUpperState(i);
 
+                    //merge
+                    state = state.mergeToUpperState();
+
+                    break;
+                case '.':
+                    if (!state.pairDotPresent) {
+                        state.pairDotPresent = true;
+                    } else {
+                        throw MimosaParserException.multiDotInPair();
+                    }
+                    break;
+                case ' ':
+                    if(tokenBuilder.length() > 0) {
+                        state.tokenStack.push(parseSingleExpr(tokenBuilder.toString()));
+                        tokenBuilder.setLength(0);
+                    }
+
+                    break;
+                default:
+                    tokenBuilder.append(c);
                     break;
             }
         }
 
         if(state.isTopState()) {
-            int parsedExprStackSize = state.parsedExprStack.size();
-            if(parsedExprStackSize == 0) {
+            int tokenSize = state.tokenStack.size();
+            if(tokenSize == 0) {
                 return parseSingleExpr(data);
-            } else if(parsedExprStackSize == 1) {
-                return state.parsedExprStack.pop();
+            } else if(tokenSize == 1) {
+                return state.tokenStack.pop();
             } else {
                 throw new RuntimeException("The size of PairStack is more than 1, something wrong!");
             }

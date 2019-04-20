@@ -5,7 +5,6 @@ import net.twodam.mimosa.exceptions.MimosaNoBindingException;
 import net.twodam.mimosa.types.*;
 import net.twodam.mimosa.utils.MimosaListUtil;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -49,8 +48,8 @@ public class MimosaRuntime {
                 //(- 1 2 3)
                 // =>
                 //(+ 1 negative(+ 2 3))
-                return applyPrimitive(strToSymbol("+"), MimosaList.list(Arrays.asList(car(params),
-                        MimosaNumber.negative(applyPrimitive(strToSymbol("+"), cdr(params), env)))), env);
+                return applyPrimitive(strToSymbol("+"), MimosaList.list(car(params),
+                        MimosaNumber.negative(applyPrimitive(strToSymbol("+"), cdr(params), env))), env);
             }
         });
 
