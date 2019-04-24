@@ -25,8 +25,8 @@ public class MimosaRuntime {
     static final Map<MimosaSymbol, Function<MimosaType, Function<Environment, MimosaType>>> primitiveFunctionMap = new HashMap<>();
 
     static {
-        registerPrimitiveSymbol(MimosaBool.TRUE_SYM, MimosaBool.TRUE);
-        registerPrimitiveSymbol(MimosaBool.FALSE_SYM, MimosaBool.FALSE);
+        registerSymbol(MimosaBool.TRUE_SYM, MimosaBool.TRUE);
+        registerSymbol(MimosaBool.FALSE_SYM, MimosaBool.FALSE);
 
         registerPrimitiveFunction(strToSymbol("quote"), params -> env -> car(params));
 
@@ -36,6 +36,15 @@ public class MimosaRuntime {
                         MimosaBool.TRUE : MimosaBool.FALSE);
 
         //=== Number operation ===
+        registerPrimitiveFunction(strToSymbol("="), params -> {
+            checkType(MimosaList.class, params);
+            int len = valToNum(length(params));
+            if(len != 2) throw MimosaEvaluatorException.paramsCountNotMatched("==2", len);
+
+            return env ->
+                    MimosaNumber.isEqual(eval(car(params), env), eval(cadr(params), env)) ?
+                            MimosaBool.TRUE : MimosaBool.FALSE;
+        });
         registerPrimitiveFunction(strToSymbol("+"), params -> {
             checkType(MimosaList.class, params);
             int len = valToNum(length(params));
@@ -101,7 +110,7 @@ public class MimosaRuntime {
         //registerPrimitiveFunction(strToSymbol("eval"), params -> env -> Evaluator.eval(car(params), env));
     }
 
-    private static void registerPrimitiveSymbol(MimosaSymbol symbol, MimosaType value) {
+    public static void registerSymbol(MimosaSymbol symbol, MimosaType value) {
         baseEnvironment = Environment.extend(baseEnvironment, symbol, value);
     }
 

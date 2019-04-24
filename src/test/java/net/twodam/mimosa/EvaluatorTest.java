@@ -5,6 +5,7 @@ import net.twodam.mimosa.types.MimosaBool;
 import net.twodam.mimosa.types.MimosaNumber;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
+import org.junit.After;
 import org.junit.Test;
 
 import static net.twodam.mimosa.evaluator.Evaluator.eval;
@@ -79,10 +80,16 @@ public class EvaluatorTest {
         assertEquals(numToVal(-100), evaluatedExpr);
     }
 
-//    @Test(expected = )
-//    public void otherExpr() {
-//        String data = "";
-//        MimosaPair expr = parser.parse(data.toCharArray());
-//        assertEquals(numToVal(1), evaluator.eval(expr, Environment.empty()));
-//    }
+    /**
+     * define 会修改全局环境
+     */
+    @Test
+    public void defineExpr() {
+        eval(parse("(define _x 1)"));
+        assertEquals(numToVal(1), eval(parse("_x")));
+        eval(parse("(define _inc (lambda (x) (+ x 1)))"));
+        assertEquals(numToVal(2), eval(parse("(_inc 1)")));
+        eval(parse("(define (_dec x) (- x 1))"));
+        assertEquals(numToVal(0), eval(parse("(_dec 1)")));
+    }
 }

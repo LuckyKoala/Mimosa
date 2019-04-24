@@ -1,9 +1,6 @@
 package net.twodam.mimosa.evaluator;
 
-import net.twodam.mimosa.evaluator.expressions.ApplicationExpr;
-import net.twodam.mimosa.evaluator.expressions.IfExpr;
-import net.twodam.mimosa.evaluator.expressions.LambdaExpr;
-import net.twodam.mimosa.evaluator.expressions.LetExpr;
+import net.twodam.mimosa.evaluator.expressions.*;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.*;
 import net.twodam.mimosa.utils.TypeUtil;
@@ -32,7 +29,11 @@ public class Evaluator {
         TypeUtil.checkType(MimosaPair.class, val);
         MimosaPair expr = (MimosaPair) val;
 
-        if(IfExpr.check(expr)) {
+        if(DefineExpr.check(expr)) {
+            MimosaRuntime.registerSymbol(DefineExpr.symbol(expr), eval(DefineExpr.value(expr), env));
+            return MimosaList.nil();
+        }
+        else if(IfExpr.check(expr)) {
             MimosaType predicate = IfExpr.predicate(expr);
             if(MimosaBool.isTrue(eval(predicate, env))) {
                 return eval(IfExpr.trueExpr(expr), env);
@@ -46,9 +47,11 @@ public class Evaluator {
                     eval(LetExpr.bindingValue(expr), env));
             MimosaType body = LetExpr.body(expr);
             return eval(body, extendedEnv);
-        } else if(LambdaExpr.check(expr)) {
+        }
+        else if(LambdaExpr.check(expr)) {
             return MimosaFunction.wrap(expr, env);
-        } else if(ApplicationExpr.check(expr)) {
+        }
+        else if(ApplicationExpr.check(expr)) {
             return apply(expr, env);
         }
 

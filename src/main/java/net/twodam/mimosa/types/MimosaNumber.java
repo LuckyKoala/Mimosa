@@ -29,6 +29,13 @@ public class MimosaNumber extends MimosaVal {
         return ZERO.equals(val);
     }
 
+    public static boolean isEqual(MimosaType a, MimosaType b) {
+        TypeUtil.checkType(MimosaNumber.class, a);
+        TypeUtil.checkType(MimosaNumber.class, b);
+
+        return a.equals(b);
+    }
+
     public static MimosaNumber add(MimosaType val1, MimosaType val2) {
         int num1 = valToNum(val1);
         int num2 = valToNum(val2);
