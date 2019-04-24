@@ -22,6 +22,6 @@ public class LambdaExpr {
     }
 
     public static MimosaType body(MimosaPair expr) {
-        return MimosaListUtil.caddr(expr);
+        return MimosaListUtil.cddr(expr);
     }
 }

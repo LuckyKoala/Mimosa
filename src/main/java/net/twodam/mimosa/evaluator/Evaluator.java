@@ -3,9 +3,12 @@ package net.twodam.mimosa.evaluator;
 import net.twodam.mimosa.evaluator.expressions.*;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.*;
+import net.twodam.mimosa.utils.MimosaListUtil;
 import net.twodam.mimosa.utils.TypeUtil;
 
-import static net.twodam.mimosa.utils.MimosaListUtil.map;
+import static net.twodam.mimosa.types.MimosaList.isNil;
+import static net.twodam.mimosa.utils.MimosaListUtil.*;
+import static net.twodam.mimosa.utils.TypeUtil.checkType;
 
 /**
  * enviroment
@@ -72,7 +75,16 @@ public class Evaluator {
             Environment extendedEnv = Environment.extend(lambdaClosure.savedEnv(),
                     LambdaExpr.params(lambdaClosure.lambdaExpr()),
                     map(valExpr -> eval(valExpr, env), valueExpr));
-            return eval(LambdaExpr.body(lambdaClosure.lambdaExpr()), extendedEnv);
+            MimosaType body = LambdaExpr.body(lambdaClosure.lambdaExpr());
+            if(MimosaList.isNil(body)) {
+                return MimosaList.nil();
+            } else {
+                while(!isNil(body) && !isNil(cdr(body))) {
+                    eval(car(body), extendedEnv);
+                    body = cdr(body);
+                }
+                return eval(car(body), extendedEnv);
+            }
         } else {
             throw MimosaEvaluatorException.unknownFunction(functionExpr);
         }

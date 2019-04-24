@@ -11,6 +11,7 @@ import org.junit.Test;
 import static net.twodam.mimosa.evaluator.Evaluator.eval;
 import static net.twodam.mimosa.parser.Parser.parse;
 import static net.twodam.mimosa.types.MimosaNumber.numToVal;
+import static net.twodam.mimosa.types.MimosaSymbol.strToSymbol;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -28,7 +29,7 @@ public class EvaluatorTest {
         MimosaType expr = parse("x");
         assertEquals(numToVal(1), eval(expr,
                 Environment.extend(Environment.empty(),
-                        MimosaSymbol.strToSymbol("x"),
+                        strToSymbol("x"),
                         MimosaNumber.numToVal(1))));
     }
 
@@ -54,8 +55,9 @@ public class EvaluatorTest {
 
     @Test
     public void lambdaExpr() {
-        MimosaType expr = parse("((lambda (y) (- y 1)) 2)");
-        assertEquals(numToVal(1), eval(expr));
+        assertEquals(numToVal(1), eval(parse("((lambda (y) (- y 1)) 2)")));
+
+        assertEquals(strToSymbol("override-val"), eval(parse("((lambda (y) (- y 1) (quote override-val)) 2)")));
     }
 
     @Test
