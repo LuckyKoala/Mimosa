@@ -43,6 +43,27 @@ public class RuntimeTest {
     }
 
     @Test
+    public void booleanOperationTest() {
+        assertEquals(MimosaBool.FALSE, eval(parse("(not #t)")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(not #f)")));
+
+        assertEquals(MimosaBool.TRUE, eval(parse("(and #t #t)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(and #t #f)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(and #f #t)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(and #f #f)")));
+
+        assertEquals(MimosaBool.TRUE, eval(parse("(or #t #t)")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(or #t #f)")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(or #f #t)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(or #f #f)")));
+
+        assertEquals(MimosaBool.FALSE, eval(parse("(xor #t #t)")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(xor #t #f)")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(xor #f #t)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(xor #f #f)")));
+    }
+
+    @Test
     public void typePredicateTest() {
         assertEquals(MimosaBool.TRUE, eval(parse("(null? (quote ()))")));
         assertEquals(MimosaBool.TRUE, eval(parse("(symbol? (quote x))")));

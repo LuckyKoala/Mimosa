@@ -31,6 +31,20 @@ public class MimosaRuntime {
 
         registerPrimitiveFunction(strToSymbol("quote"), params -> env -> car(params));
 
+        //=== Boolean operation ===
+        registerPrimitiveFunction(strToSymbol("not"), params ->
+                env -> MimosaBool.isTrue(eval(car(params), env)) ?
+                        MimosaBool.FALSE : MimosaBool.TRUE);
+        registerPrimitiveFunction(strToSymbol("and"), params ->
+                env -> (MimosaBool.isTrue(eval(car(params), env)) && MimosaBool.isTrue(eval(cadr(params), env))) ?
+                        MimosaBool.TRUE : MimosaBool.FALSE);
+        registerPrimitiveFunction(strToSymbol("or"), params ->
+                env -> (MimosaBool.isTrue(eval(car(params), env)) || MimosaBool.isTrue(eval(cadr(params), env))) ?
+                        MimosaBool.TRUE : MimosaBool.FALSE);
+        registerPrimitiveFunction(strToSymbol("xor"), params ->
+                env -> (MimosaBool.isTrue(eval(car(params), env)) ^ MimosaBool.isTrue(eval(cadr(params), env))) ?
+                        MimosaBool.TRUE : MimosaBool.FALSE);
+
         //=== Number predicate ===
         registerPrimitiveFunction(strToSymbol("zero?"), params ->
                 env -> MimosaNumber.isZero(eval(car(params), env)) ?
