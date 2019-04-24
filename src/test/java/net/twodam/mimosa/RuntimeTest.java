@@ -43,6 +43,20 @@ public class RuntimeTest {
     }
 
     @Test
+    public void typePredicateTest() {
+        assertEquals(MimosaBool.TRUE, eval(parse("(null? (quote ()))")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(symbol? (quote x))")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(number? (quote 3))")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(pair? (quote ()))")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(pair? (quote (x . y)))")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(pair? (quote (x y z)))")));
+
+        assertEquals(MimosaBool.TRUE, eval(parse("(eq? (quote 1) (quote 1))")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(eq? (quote (a c)) (quote (a c)))")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(eq? (quote (a c)) (quote (a b)))")));
+    }
+
+    @Test
     public void systemTest() {
         //
     }

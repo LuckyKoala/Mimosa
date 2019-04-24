@@ -4,6 +4,7 @@ import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.exceptions.MimosaNoBindingException;
 import net.twodam.mimosa.types.*;
 import net.twodam.mimosa.utils.MimosaListUtil;
+import net.twodam.mimosa.utils.TypeUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,23 @@ public class MimosaRuntime {
         //=== Number predicate ===
         registerPrimitiveFunction(strToSymbol("zero?"), params ->
                 env -> MimosaNumber.isZero(eval(car(params), env)) ?
+                        MimosaBool.TRUE : MimosaBool.FALSE);
+
+        //=== Type predicate ===
+        registerPrimitiveFunction(strToSymbol("null?"), params ->
+                env -> MimosaList.isNil(eval(car(params), env)) ?
+                        MimosaBool.TRUE : MimosaBool.FALSE);
+        registerPrimitiveFunction(strToSymbol("eq?"), params ->
+                env -> eval(car(params), env).equals(eval(cadr(params), env)) ?
+                        MimosaBool.TRUE : MimosaBool.FALSE);
+        registerPrimitiveFunction(strToSymbol("number?"), params ->
+                env -> TypeUtil.isCompatibleType(MimosaNumber.class, eval(car(params), env)) ?
+                        MimosaBool.TRUE : MimosaBool.FALSE);
+        registerPrimitiveFunction(strToSymbol("symbol?"), params ->
+                env -> TypeUtil.isCompatibleType(MimosaSymbol.class, eval(car(params), env)) ?
+                        MimosaBool.TRUE : MimosaBool.FALSE);
+        registerPrimitiveFunction(strToSymbol("pair?"), params ->
+                env -> TypeUtil.isCompatibleType(MimosaPair.class, eval(car(params), env)) ?
                         MimosaBool.TRUE : MimosaBool.FALSE);
 
         //=== Number operation ===
