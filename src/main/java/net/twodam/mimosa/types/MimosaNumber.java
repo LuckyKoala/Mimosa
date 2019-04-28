@@ -2,6 +2,8 @@ package net.twodam.mimosa.types;
 
 import net.twodam.mimosa.utils.TypeUtil;
 
+import java.util.List;
+
 /**
  * Created by luckykoala on 19-4-5.
  */
@@ -10,10 +12,6 @@ public class MimosaNumber extends MimosaVal {
 
     MimosaNumber(int number) {
         super(number);
-    }
-
-    public static MimosaNumber negative(MimosaType mimosaType) {
-        return numToVal(-valToNum(mimosaType));
     }
 
     public static MimosaNumber numToVal(int number) {
@@ -36,9 +34,15 @@ public class MimosaNumber extends MimosaVal {
         return a.equals(b);
     }
 
-    public static MimosaNumber add(MimosaType val1, MimosaType val2) {
-        int num1 = valToNum(val1);
-        int num2 = valToNum(val2);
-        return numToVal(num1 + num2);
+    public static MimosaNumber add(List<MimosaType> vals) {
+        return vals.stream().reduce(ZERO, (a, b) -> numToVal(valToNum(a) + valToNum(b)), (a, b) -> b);
+    }
+
+    public static MimosaNumber subtract(List<MimosaType> vals) {
+        if(vals.size() == 1) {
+            return numToVal(0 - valToNum(vals.get(0)));
+        } else {
+            return vals.subList(1, vals.size()).stream().reduce((MimosaNumber) vals.get(0), (a, b) -> numToVal(valToNum(a) - valToNum(b)), (a, b) -> b);
+        }
     }
 }

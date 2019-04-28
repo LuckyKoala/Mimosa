@@ -1,8 +1,11 @@
 package net.twodam.mimosa.types;
 
 import net.twodam.mimosa.exceptions.MimosaPairExtractorException;
+import net.twodam.mimosa.utils.MimosaListUtil;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 public class MimosaList extends MimosaPair {
     MimosaList(MimosaType car, MimosaList cdr) {
@@ -27,6 +30,20 @@ public class MimosaList extends MimosaPair {
             list = cons(vals.get(i), list);
         }
         return list;
+    }
+
+    public static List<MimosaType> toList(MimosaType list) {
+        Stack<MimosaType> stack = new Stack<>();
+        while(!isNil(list)) {
+            stack.push(MimosaListUtil.car(list));
+            list = MimosaListUtil.cdr(list);
+        }
+
+        List<MimosaType> ret = new ArrayList<>(stack.size());
+        while(!stack.isEmpty()) {
+            ret.add(stack.pop());
+        }
+        return ret;
     }
 
     public static MimosaList nil() {

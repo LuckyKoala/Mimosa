@@ -6,20 +6,28 @@ import net.twodam.mimosa.evaluator.Environment;
  * Created by luckykoala on 19-4-14.
  */
 public class MimosaFunction extends MimosaType {
-    MimosaPair lambdaExpr;
+    MimosaType params;
+    MimosaType body;
     Environment savedEnv;
+    String expr; //only for toString
 
-    MimosaFunction(MimosaPair lambdaExpr, Environment savedEnv) {
-        this.lambdaExpr = lambdaExpr;
+    public MimosaFunction(MimosaType params, MimosaType body, Environment savedEnv, String expr) {
+        this.params = params;
+        this.body = body;
         this.savedEnv = savedEnv;
+        this.expr = expr;
     }
 
-    public static MimosaFunction wrap(MimosaPair lambdaExpr, Environment savedEnv) {
-        return new MimosaFunction(lambdaExpr, savedEnv);
+    public static MimosaFunction wrap(MimosaType params, MimosaType body, Environment savedEnv, String expr) {
+        return new MimosaFunction(params, body, savedEnv, expr);
     }
 
-    public MimosaPair lambdaExpr() {
-        return lambdaExpr;
+    public MimosaType params() {
+        return params;
+    }
+
+    public MimosaType body() {
+        return body;
     }
 
     public Environment savedEnv() {
@@ -28,6 +36,6 @@ public class MimosaFunction extends MimosaType {
 
     @Override
     public String toString() {
-        return "[#Closure " + lambdaExpr + "]";
+        return "[#Closure " + expr + "]";
     }
 }

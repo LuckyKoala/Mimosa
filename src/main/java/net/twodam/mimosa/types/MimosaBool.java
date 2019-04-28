@@ -2,6 +2,8 @@ package net.twodam.mimosa.types;
 
 import net.twodam.mimosa.utils.TypeUtil;
 
+import java.util.List;
+
 /**
  * Created by luckykoala on 19-4-5.
  */
@@ -20,18 +22,34 @@ public class MimosaBool extends MimosaVal {
         return bool ? TRUE : FALSE;
     }
 
-    public static boolean valToBool(MimosaVal mimosaVal) {
-        TypeUtil.checkType(MimosaBool.class, mimosaVal);
-        return (boolean) mimosaVal.val;
-    }
-
+    /**
+     * @param val
+     * @return if val is #f, return false, otherwise true
+     */
     public static boolean isTrue(MimosaType val) {
         if(TypeUtil.isCompatibleType(MimosaSymbol.class, val)) {
-            return val.equals(TRUE_SYM);
+            return !val.equals(FALSE_SYM);
+        } else if(TypeUtil.isCompatibleType(MimosaBool.class, val)) {
+            return TRUE == val;
         }
 
-        TypeUtil.checkType(MimosaBool.class, val);
-        return TRUE==val;
+        return true;
+    }
+
+    public static MimosaBool not(MimosaType val) {
+        return boolToVal(!isTrue(val));
+    }
+
+    public static MimosaBool and(List<MimosaType> vals) {
+        return vals.stream().reduce(TRUE, (a, b) -> boolToVal(isTrue(a) && isTrue(b)), (a, b) -> b);
+    }
+
+    public static MimosaBool or(List<MimosaType> vals) {
+        return vals.stream().reduce(FALSE, (a, b) -> boolToVal(isTrue(a) || isTrue(b)), (a, b) -> b);
+    }
+
+    public static MimosaBool xor(List<MimosaType> vals) {
+        return boolToVal(isTrue(vals.get(0)) ^ isTrue(vals.get(1)));
     }
 
     @Override

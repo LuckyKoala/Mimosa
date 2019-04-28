@@ -40,6 +40,7 @@ public class RuntimeTest {
     @Test
     public void listOperationTest() {
         assertEquals(list(numToVal(2), numToVal(3), numToVal(4)), eval(parse("(map (lambda (v) (+ v 1)) (list 1 2 3))")));
+        assertEquals(numToVal(6), eval(parse("(foldl (lambda (i v) (+ i v)) 0 (list 1 2 3))")));
     }
 
     @Test
