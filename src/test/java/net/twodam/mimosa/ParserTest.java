@@ -57,10 +57,20 @@ public class ParserTest {
 
     @Test
     public void quote() {
+        assertEquals(makeQuote(strToSymbol("'")), parse("''"));
         assertEquals(makeQuote(numToVal(1)), parse("'1"));
         assertEquals(makeQuote(list(numToVal(1), numToVal(2))), parse("'(1 2)"));
+        assertEquals(list(strToSymbol("f"), makeQuote(strToSymbol("'"))), parse("(f '')"));
         assertEquals(list(strToSymbol("f"),
                 makeQuote(list(strToSymbol("a"), numToVal(2), numToVal(3)))),
                 parse("(f '(a 2 3))"));
+    }
+
+    @Test
+    public void escape() {
+        assertEquals(strToSymbol("'"), parse("\\'"));
+        assertEquals(strToSymbol("("), parse("\\("));
+        assertEquals(strToSymbol(")"), parse("\\)"));
+        assertEquals(strToSymbol("."), parse("\\."));
     }
 }

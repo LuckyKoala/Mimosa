@@ -64,62 +64,54 @@ public class Parser {
         void disableQuoteMode() {
             this.quoteMode = QuoteMode.DISABLED;
         }
+
+        void trySwitchQuoteModeTo(QuoteMode newQuoteMode) {
+            if(QuoteMode.ENABLED == quoteMode) {
+                quoteMode = newQuoteMode;
+            }
+        }
     }
 
-    /**
-     * 1 -> const-expr 1
-     * (x y (a (z 2 ) (a 1) 1) ... 1) -> MimosaList (x y (z 2) ... 1)
-     * ' ' complete a val
-     * '(' increase list level
-     * ')' reverse and parse a list
-     * '.' indicates a pair which combines exactly two values
-     * @return
-     */
     public static MimosaType parse(String data) {
         StringBuilder tokenBuilder = new StringBuilder();
         State state = State.topState();
+        boolean escapeModeEnabled = false;
 
         for(int i=0; i<data.length(); i++) {
             char c = data.charAt(i);
 
-            switch (c) {
-                case '\'':
-                    //'exp => (quote exp)
-                    if(tokenBuilder.length() == 0) {
-                        state.enableQuoteMode();
-                    }
+            if(escapeModeEnabled) {
+                fillTokenBuilder(tokenBuilder, state, c);
+                escapeModeEnabled = false;
+                continue;
+            }
 
+            switch (c) {
+                case '\\':
+                    escapeModeEnabled = true;
                     break;
+
                 case '(':
                     if(tokenBuilder.length() == 0) {
-                        if(QuoteMode.ENABLED == state.quoteMode) {
-                            state.quoteMode = QuoteMode.PAIR;
-                        }
-
+                        state.trySwitchQuoteModeTo(QuoteMode.PAIR);
                         state = state.nextState(); //new state for deeper depth
                     } else {
                         throw MimosaParserException.listCharInVal();
                     }
-
                     break;
+
                 case ')':
                     if(state.isTopState()) throw MimosaParserException.unfinishedPair();
 
-                    //Push possibly remain token
-                    if(tokenBuilder.length() > 0) {
-                        state.tokenStack.push(parseSingleExpr(tokenBuilder.toString()));
-                        tokenBuilder.setLength(0);
-                    }
-
-                    //merge
-                    state = state.mergeToUpperState();
+                    tryParseToken(tokenBuilder, state);
+                    state = state.mergeToUpperState(); //finish this state, merge data to upper state
 
                     if(QuoteMode.PAIR == state.quoteMode) {
                         state.tokenStack.push(QuoteExpr.makeQuote(state.tokenStack.pop()));
                         state.disableQuoteMode();
                     }
-
                     break;
+
                 case '.':
                     if (!state.pairDotPresent) {
                         state.pairDotPresent = true;
@@ -127,23 +119,21 @@ public class Parser {
                         throw MimosaParserException.multiDotInPair();
                     }
                     break;
+
                 case ' ':
-                    if(tokenBuilder.length() > 0) {
-                        state.tokenStack.push(parseSingleExpr(tokenBuilder.toString()));
-                        tokenBuilder.setLength(0);
-
-                        if(QuoteMode.VAL == state.quoteMode) {
-                            state.tokenStack.push(QuoteExpr.makeQuote(state.tokenStack.pop()));
-                            state.disableQuoteMode();
-                        }
-                    }
-
+                    tryParseToken(tokenBuilder, state);
                     break;
-                default:
-                    tokenBuilder.append(c);
-                    if(QuoteMode.ENABLED == state.quoteMode) {
-                        state.quoteMode = QuoteMode.VAL;
+
+                case '\'':
+                    //'exp => (quote exp)
+                    if(tokenBuilder.length() == 0 && QuoteMode.DISABLED == state.quoteMode) {
+                        state.enableQuoteMode();
+                        break;
                     }
+
+                    //fall through to default case
+                default:
+                    fillTokenBuilder(tokenBuilder, state, c);
                     break;
             }
         }
@@ -151,15 +141,7 @@ public class Parser {
         if(state.isTopState()) {
             MimosaType ret;
             if(state.tokenStack.size() == 0) {
-                if(tokenBuilder.length() > 0) {
-                    state.tokenStack.push(parseSingleExpr(tokenBuilder.toString()));
-                    tokenBuilder.setLength(0);
-
-                    if(QuoteMode.VAL == state.quoteMode) {
-                        state.tokenStack.push(QuoteExpr.makeQuote(state.tokenStack.pop()));
-                        state.disableQuoteMode();
-                    }
-                }
+                tryParseToken(tokenBuilder, state);
             }
 
             if(state.tokenStack.size() == 1) {
@@ -175,6 +157,24 @@ public class Parser {
             }
         } else {
             throw MimosaParserException.unfinishedPair();
+        }
+    }
+
+    private static void fillTokenBuilder(StringBuilder tokenBuilder, State state, char c) {
+        tokenBuilder.append(c);
+        state.trySwitchQuoteModeTo(QuoteMode.VAL);
+    }
+
+    private static void tryParseToken(StringBuilder tokenBuilder, State state) {
+        //Push possibly remain token
+        if (tokenBuilder.length() > 0) {
+            state.tokenStack.push(parseSingleExpr(tokenBuilder.toString()));
+            tokenBuilder.setLength(0);
+
+            if (QuoteMode.VAL == state.quoteMode) {
+                state.tokenStack.push(QuoteExpr.makeQuote(state.tokenStack.pop()));
+                state.disableQuoteMode();
+            }
         }
     }
 

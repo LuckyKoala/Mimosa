@@ -28,10 +28,15 @@ public class MimosaNumber extends MimosaVal {
     }
 
     public static boolean isEqual(MimosaType a, MimosaType b) {
-        TypeUtil.checkType(MimosaNumber.class, a);
-        TypeUtil.checkType(MimosaNumber.class, b);
+        return valToNum(a) == valToNum(b);
+    }
 
-        return a.equals(b);
+    public static boolean isGreater(MimosaType a, MimosaType b) {
+        return valToNum(a) > valToNum(b);
+    }
+
+    public static boolean isLess(MimosaType a, MimosaType b) {
+        return valToNum(a) < valToNum(b);
     }
 
     public static MimosaNumber add(List<MimosaType> vals) {
@@ -40,9 +45,21 @@ public class MimosaNumber extends MimosaVal {
 
     public static MimosaNumber subtract(List<MimosaType> vals) {
         if(vals.size() == 1) {
-            return numToVal(0 - valToNum(vals.get(0)));
+            return numToVal(-valToNum(vals.get(0)));
         } else {
             return vals.subList(1, vals.size()).stream().reduce((MimosaNumber) vals.get(0), (a, b) -> numToVal(valToNum(a) - valToNum(b)), (a, b) -> b);
+        }
+    }
+
+    public static MimosaNumber multiply(List<MimosaType> vals) {
+        return vals.stream().reduce(numToVal(1), (a, b) -> numToVal(valToNum(a) * valToNum(b)), (a, b) -> b);
+    }
+
+    public static MimosaNumber divide(List<MimosaType> vals) {
+        if(vals.size() == 1) {
+            return numToVal(1 / valToNum(vals.get(0)));
+        } else {
+            return vals.subList(1, vals.size()).stream().reduce((MimosaNumber) vals.get(0), (a, b) -> numToVal(valToNum(a) / valToNum(b)), (a, b) -> b);
         }
     }
 }

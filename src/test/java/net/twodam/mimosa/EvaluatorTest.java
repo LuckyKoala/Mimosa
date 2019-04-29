@@ -1,7 +1,6 @@
 package net.twodam.mimosa;
 
 import net.twodam.mimosa.evaluator.Environment;
-import net.twodam.mimosa.types.MimosaBool;
 import net.twodam.mimosa.types.MimosaNumber;
 import net.twodam.mimosa.types.MimosaType;
 import org.junit.Test;
@@ -29,14 +28,6 @@ public class EvaluatorTest {
                 Environment.extend(Environment.empty(),
                         strToSymbol("x"),
                         MimosaNumber.numToVal(1))));
-    }
-
-    @Test
-    public void primitiveFunction() {
-        assertEquals(numToVal(1), eval(parse("(+ 2 (- 1))")));
-        assertEquals(numToVal(1), eval(parse("(- 2 1)")));
-        assertEquals(MimosaBool.FALSE, eval(parse("(zero? 1)")));
-        assertEquals(MimosaBool.TRUE, eval(parse("(zero? 0)")));
     }
 
     @Test

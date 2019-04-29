@@ -73,10 +73,35 @@ public class MimosaRuntime {
             paramsLengthEq(2, params.size());
             return boolToVal(MimosaNumber.isEqual(params.get(0), params.get(1)));
         });
+        registerPrimitiveFunction(strToSymbol(">"), params -> {
+            paramsLengthEq(2, params.size());
+            return boolToVal(MimosaNumber.isGreater(params.get(0), params.get(1)));
+        });
+        registerPrimitiveFunction(strToSymbol("<"), params -> {
+            paramsLengthEq(2, params.size());
+            return boolToVal(MimosaNumber.isLess(params.get(0), params.get(1)));
+        });
+        registerPrimitiveFunction(strToSymbol(">="), params -> {
+            paramsLengthEq(2, params.size());
+            return boolToVal(MimosaNumber.isGreater(params.get(0), params.get(1)) || MimosaNumber.isEqual(params.get(0), params.get(1)));
+        });
+        registerPrimitiveFunction(strToSymbol("<="), params -> {
+            paramsLengthEq(2, params.size());
+            return boolToVal(MimosaNumber.isLess(params.get(0), params.get(1)) || MimosaNumber.isEqual(params.get(0), params.get(1)));
+        });
+        registerPrimitiveFunction(strToSymbol("="), params -> {
+            paramsLengthEq(2, params.size());
+            return boolToVal(MimosaNumber.isEqual(params.get(0), params.get(1)));
+        });
         registerPrimitiveFunction(strToSymbol("+"), MimosaNumber::add);
         registerPrimitiveFunction(strToSymbol("-"), params -> {
             paramsLengthGe(1, params.size());
             return MimosaNumber.subtract(params);
+        });
+        registerPrimitiveFunction(strToSymbol("*"), MimosaNumber::multiply);
+        registerPrimitiveFunction(strToSymbol("/"), params -> {
+            paramsLengthGe(1, params.size());
+            return MimosaNumber.divide(params);
         });
 
         //=== Pair ===

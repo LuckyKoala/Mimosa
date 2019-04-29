@@ -45,6 +45,31 @@ public class RuntimeTest {
     }
 
     @Test
+    public void numberOperationTest() {
+        assertEquals(numToVal(1), eval(parse("(+ 2 (- 1))")));
+        assertEquals(numToVal(1), eval(parse("(- 2 1)")));
+        assertEquals(numToVal(6), eval(parse("(* 2 3)")));
+        assertEquals(numToVal(0), eval(parse("(/ 2 6)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(zero? 1)")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(zero? 0)")));
+
+        assertEquals(MimosaBool.TRUE, eval(parse("(= 1 1)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(= 1 -1)")));
+
+        assertEquals(MimosaBool.TRUE, eval(parse("(> 1 -1)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(> -1 1)")));
+
+        assertEquals(MimosaBool.FALSE, eval(parse("(< 1 -1)")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(< -1 1)")));
+
+        assertEquals(MimosaBool.TRUE, eval(parse("(>= 1 -1)")));
+        assertEquals(MimosaBool.FALSE, eval(parse("(>= -1 1)")));
+
+        assertEquals(MimosaBool.FALSE, eval(parse("(<= 1 -1)")));
+        assertEquals(MimosaBool.TRUE, eval(parse("(<= -1 1)")));
+    }
+
+    @Test
     public void booleanOperationTest() {
         assertEquals(MimosaBool.FALSE, eval(parse("(not #t)")));
         assertEquals(MimosaBool.TRUE, eval(parse("(not #f)")));
