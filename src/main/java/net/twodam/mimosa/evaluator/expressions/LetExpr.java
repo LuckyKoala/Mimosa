@@ -26,14 +26,16 @@ public class LetExpr {
         return append(list(append(list(LambdaExpr.TAG, bindingKeys(expr)), body(expr))), bindingValues(expr));
     }
 
+    public static MimosaType entries(MimosaPair expr) {
+        return MimosaListUtil.cadr(expr);
+    }
+
     public static MimosaType bindingKeys(MimosaPair expr) {
-        MimosaType entries = MimosaListUtil.cadr(expr);
-        return map(MimosaListUtil::car, entries);
+        return map(MimosaListUtil::car, entries(expr));
     }
 
     public static MimosaType bindingValues(MimosaPair expr) {
-        MimosaType entries = MimosaListUtil.cadr(expr);
-        return map(MimosaListUtil::cadr, entries);
+        return map(MimosaListUtil::cadr, entries(expr));
     }
 
     public static MimosaType body(MimosaPair expr) {
