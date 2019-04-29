@@ -11,6 +11,7 @@ import net.twodam.mimosa.utils.TypeUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static net.twodam.mimosa.utils.MimosaListUtil.*;
 
@@ -43,16 +44,24 @@ public class Environment {
         public int hashCode() {
             return key.hashCode();
         }
+
+        @Override
+        public String toString() {
+            return String.format("(%s %s)", key, value);
+        }
     }
 
-    private List<Entry> entryList;
+    List<Entry> entryList;
+    private Environment upperEnv;
 
     Environment(List<Entry> entryList) {
         this.entryList = entryList;
+        this.upperEnv = null;
     }
 
     Environment(Environment env) {
-        this.entryList = new ArrayList<>(env.entryList);
+        this.entryList = new ArrayList<>();
+        this.upperEnv = env;
     }
 
     public static Environment empty() {
@@ -92,12 +101,26 @@ public class Environment {
     }
 
     public static MimosaType search(Environment env, MimosaSymbol key) {
-        final int index = env.entryList.lastIndexOf(Entry.wrapKey(key));
-        if(index != -1) {
-            //Found binding of key
-            return env.entryList.get(index).value;
+        while(env != null) {
+            final int index = env.entryList.lastIndexOf(Entry.wrapKey(key));
+            if(index != -1) {
+                //Found binding of key
+                return env.entryList.get(index).value;
+            } else {
+                env = env.upperEnv;
+            }
+        }
+
+        throw MimosaNoBindingException.noBindingOf(key);
+    }
+
+    @Override
+    public String toString() {
+        if(upperEnv == null) {
+            return entryList.stream().map(Entry::toString).collect(Collectors.joining("\n"));
         } else {
-            throw MimosaNoBindingException.noBindingOf(key);
+            return upperEnv.toString() + "\n\n" +
+                    entryList.stream().map(Entry::toString).collect(Collectors.joining("\n"));
         }
     }
 }

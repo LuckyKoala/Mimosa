@@ -63,9 +63,24 @@ public class MimosaListUtil {
         }
     }
 
-    /*public static MimosaList append(MimosaList a, MimosaList b) {
-        //
-    }*/
+    public static MimosaType append(MimosaType... lists) {
+        if(lists.length == 1) {
+            return lists[0];
+        }
+
+        checkType(MimosaList.class, lists[0]);
+        List<MimosaType> valueList = new ArrayList<>();
+
+        for(int i=0; i<lists.length; i++) {
+            MimosaType values = lists[i];
+            while(!isNil(values)) {
+                valueList.add(car(values));
+                values = cdr(values);
+            }
+        }
+
+        return list(valueList);
+    }
 
     //=========== List Iteration ===========
     //ref: https://docs.racket-lang.org/reference/pairs.html#%28part._.List_.Iteration%29

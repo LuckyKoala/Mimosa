@@ -29,16 +29,17 @@ public class RuntimeTest {
     }
 
     @Test
-    public void listTest() {
+    public void listOperationTest() {
         assertEquals(list(numToVal(1), numToVal(2), numToVal(3)), eval(parse("(list 1 2 3)")));
         assertEquals(numToVal(1), eval(parse("(car (list 1 2 3))")));
         assertEquals(list(numToVal(2), numToVal(3)), eval(parse("(cdr (list 1 2 3))")));
         assertEquals(numToVal(3), eval(parse("(length (list 1 2 3))")));
         assertEquals(numToVal(2), eval(parse("(list-ref (list 1 2 3) 1)")));
+        assertEquals(list(numToVal(1), numToVal(2), numToVal(3)), eval(parse("(append (list 1 2) (list 3))")));
     }
 
     @Test
-    public void listOperationTest() {
+    public void listIterationTest() {
         assertEquals(list(numToVal(2), numToVal(3), numToVal(4)), eval(parse("(map (lambda (v) (+ v 1)) (list 1 2 3))")));
         assertEquals(numToVal(6), eval(parse("(foldl (lambda (i v) (+ i v)) 0 (list 1 2 3))")));
     }

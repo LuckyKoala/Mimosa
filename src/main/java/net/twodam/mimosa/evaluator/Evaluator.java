@@ -37,6 +37,14 @@ public class Evaluator {
         TypeUtil.checkType(MimosaPair.class, val);
         MimosaPair expr = (MimosaPair) val;
 
+        //Transform stage
+        if(LetExpr.check(expr)) {
+            return analyze(LetExpr.toLambdaExpr(expr));
+        } else if(BeginExpr.check(expr)) {
+            return analyze(BeginExpr.toLambdaExpr(expr));
+        }
+
+        //Actual analyze stage
         if(QuoteExpr.check(expr)) {
             MimosaType value = QuoteExpr.value(expr);
             return env -> value;
@@ -57,13 +65,6 @@ public class Evaluator {
 
             return env -> MimosaBool.isTrue(predicate.apply(env)) ?
                     trueExpr.apply(env) : falseExpr.apply(env);
-        }
-        else if(LetExpr.check(expr)) {
-            MimosaSymbol key = LetExpr.bindingKey(expr);
-            Analyzed value = analyze(LetExpr.bindingValue(expr));
-            Analyzed body = analyze(LetExpr.body(expr));
-
-            return env -> body.apply(Environment.extend(env, key, value.apply(env)));
         }
         else if(LambdaExpr.check(expr)) {
             MimosaType params = LambdaExpr.params(expr);

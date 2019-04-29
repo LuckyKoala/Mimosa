@@ -94,6 +94,10 @@ public class MimosaRuntime {
             paramsLengthEq(2, params.size());
             return listRef(params.get(0), params.get(1));
         });
+        registerPrimitiveFunction(strToSymbol("append"), params -> {
+            paramsLengthGe(1, params.size());
+            return append(params.toArray(new MimosaType[0]));
+        });
 
         //=== List operation ===
         registerPrimitiveFunction(strToSymbol("map"), params -> {
@@ -148,14 +152,14 @@ public class MimosaRuntime {
     }
 
     public static void registerSymbol(MimosaSymbol symbol, MimosaType value) {
-        baseEnvironment = Environment.extend(baseEnvironment, symbol, value);
+        baseEnvironment.entryList.add(new Environment.Entry(symbol, value));
     }
 
     private static void registerPrimitiveFunction(MimosaSymbol symbol,
                                                   Function<List<MimosaType>, MimosaType> function) {
         primitiveFunctionMap.put(symbol, function);
         //register primitive symbol to symbol table
-        baseEnvironment = Environment.extend(baseEnvironment, symbol, MimosaPrimitiveFunction.wrap(symbol));
+        baseEnvironment.entryList.add(new Environment.Entry(symbol, MimosaPrimitiveFunction.wrap(symbol)));
     }
 
     public static MimosaType applyPrimitive(MimosaSymbol name, List<MimosaType> params) {

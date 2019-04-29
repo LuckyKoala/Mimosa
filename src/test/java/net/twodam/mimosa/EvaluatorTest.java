@@ -52,6 +52,12 @@ public class EvaluatorTest {
     }
 
     @Test
+    public void beginExpr() {
+        MimosaType expr = parse("(begin (+ 1 1) (+ 1 1))");
+        assertEquals(numToVal(2), eval(expr));
+    }
+
+    @Test
     public void lambdaExpr() {
         assertEquals(numToVal(1), eval(parse("((lambda (y) (- y 1)) 2)")));
 

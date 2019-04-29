@@ -7,8 +7,13 @@ import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;
 import net.twodam.mimosa.utils.TypeUtil;
 
+import static net.twodam.mimosa.types.MimosaList.list;
+import static net.twodam.mimosa.utils.MimosaListUtil.append;
+
 /**
- * (let (var val) body)
+ * (let (var val) exp1 exp2)
+ * =>
+ * ((lambda (var) exp1 exp2) val)
  * Created by luckykoala on 19-4-5.
  */
 public class LetExpr {
@@ -16,6 +21,13 @@ public class LetExpr {
 
     public static boolean check(MimosaPair expr) {
         return TAG.equals(expr.car());
+    }
+
+    public static MimosaType toLambdaExpr(MimosaPair expr) {
+        return list(
+                append(list(LambdaExpr.TAG, list(bindingKey(expr))), body(expr)),
+                bindingValue(expr)
+        );
     }
 
     public static MimosaSymbol bindingKey(MimosaPair expr) {
@@ -32,6 +44,6 @@ public class LetExpr {
     }
 
     public static MimosaType body(MimosaPair expr) {
-        return MimosaListUtil.caddr(expr);
+        return MimosaListUtil.cddr(expr);
     }
 }
