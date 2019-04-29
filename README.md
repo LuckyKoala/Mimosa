@@ -6,8 +6,9 @@
 > 基本类型
 
 * lambda表达式及函数应用
-* define定义全局变量，修改环境
-* boolean number symbol 基本数据类型
+* define定义全局变量，拓展环境
+* set!改变变量的值，修改环境
+* boolean number symbol function 基本数据类型
 * pair list 基本组合数据类型
 * if 条件表达式
 * quote 转义

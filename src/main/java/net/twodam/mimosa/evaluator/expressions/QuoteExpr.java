@@ -1,5 +1,6 @@
 package net.twodam.mimosa.evaluator.expressions;
 
+import net.twodam.mimosa.types.MimosaList;
 import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
@@ -17,5 +18,9 @@ public class QuoteExpr {
 
     public static MimosaType value(MimosaPair expr) {
         return MimosaListUtil.cadr(expr);
+    }
+
+    public static MimosaType makeQuote(MimosaType value) {
+        return MimosaList.list(TAG, value);
     }
 }

@@ -3,6 +3,7 @@ package net.twodam.mimosa;
 import net.twodam.mimosa.types.MimosaType;
 import org.junit.Test;
 
+import static net.twodam.mimosa.evaluator.expressions.QuoteExpr.makeQuote;
 import static net.twodam.mimosa.parser.Parser.parse;
 import static net.twodam.mimosa.types.MimosaList.list;
 import static net.twodam.mimosa.types.MimosaNumber.numToVal;
@@ -52,5 +53,14 @@ public class ParserTest {
         assertEquals(numToVal(2), length(car(cddddr(list))));
         assertEquals(list(numToVal(5), numToVal(6))
                 , listRef(list, numToVal(4)));
+    }
+
+    @Test
+    public void quote() {
+        assertEquals(makeQuote(numToVal(1)), parse("'1"));
+        assertEquals(makeQuote(list(numToVal(1), numToVal(2))), parse("'(1 2)"));
+        assertEquals(list(strToSymbol("f"),
+                makeQuote(list(strToSymbol("a"), numToVal(2), numToVal(3)))),
+                parse("(f '(a 2 3))"));
     }
 }

@@ -1,19 +1,29 @@
 package net.twodam.mimosa.parser;
 
+import net.twodam.mimosa.evaluator.expressions.QuoteExpr;
 import net.twodam.mimosa.exceptions.MimosaParserException;
 import net.twodam.mimosa.types.*;
 
 import java.util.Stack;
 
 public class Parser {
+    enum QuoteMode {
+        DISABLED, //正常模式
+        ENABLED, //进入quote模式
+        VAL, //quote的是MimosaVal
+        PAIR //quote的是MimosaPair
+    }
+
     static class State {
         State upperState;
         boolean pairDotPresent;
+        QuoteMode quoteMode;
         Stack<MimosaType> tokenStack;
 
         private State(State upperState) {
             this.upperState = upperState;
             this.pairDotPresent = false;
+            this.quoteMode = QuoteMode.DISABLED;
             this.tokenStack = new Stack<>();
         }
 
@@ -46,6 +56,14 @@ public class Parser {
 
             return upperState;
         }
+
+        void enableQuoteMode() {
+            this.quoteMode = QuoteMode.ENABLED;
+        }
+
+        void disableQuoteMode() {
+            this.quoteMode = QuoteMode.DISABLED;
+        }
     }
 
     /**
@@ -65,14 +83,25 @@ public class Parser {
             char c = data.charAt(i);
 
             switch (c) {
+                case '\'':
+                    //'exp => (quote exp)
+                    if(tokenBuilder.length() == 0) {
+                        state.enableQuoteMode();
+                    }
+
+                    break;
                 case '(':
                     if(tokenBuilder.length() == 0) {
+                        if(QuoteMode.ENABLED == state.quoteMode) {
+                            state.quoteMode = QuoteMode.PAIR;
+                        }
+
                         state = state.nextState(); //new state for deeper depth
                     } else {
                         throw MimosaParserException.listCharInVal();
                     }
-                    break;
 
+                    break;
                 case ')':
                     if(state.isTopState()) throw MimosaParserException.unfinishedPair();
 
@@ -84,6 +113,11 @@ public class Parser {
 
                     //merge
                     state = state.mergeToUpperState();
+
+                    if(QuoteMode.PAIR == state.quoteMode) {
+                        state.tokenStack.push(QuoteExpr.makeQuote(state.tokenStack.pop()));
+                        state.disableQuoteMode();
+                    }
 
                     break;
                 case '.':
@@ -97,23 +131,47 @@ public class Parser {
                     if(tokenBuilder.length() > 0) {
                         state.tokenStack.push(parseSingleExpr(tokenBuilder.toString()));
                         tokenBuilder.setLength(0);
+
+                        if(QuoteMode.VAL == state.quoteMode) {
+                            state.tokenStack.push(QuoteExpr.makeQuote(state.tokenStack.pop()));
+                            state.disableQuoteMode();
+                        }
                     }
 
                     break;
                 default:
                     tokenBuilder.append(c);
+                    if(QuoteMode.ENABLED == state.quoteMode) {
+                        state.quoteMode = QuoteMode.VAL;
+                    }
                     break;
             }
         }
 
         if(state.isTopState()) {
-            int tokenSize = state.tokenStack.size();
-            if(tokenSize == 0) {
-                return parseSingleExpr(data);
-            } else if(tokenSize == 1) {
-                return state.tokenStack.pop();
+            MimosaType ret;
+            if(state.tokenStack.size() == 0) {
+                if(tokenBuilder.length() > 0) {
+                    state.tokenStack.push(parseSingleExpr(tokenBuilder.toString()));
+                    tokenBuilder.setLength(0);
+
+                    if(QuoteMode.VAL == state.quoteMode) {
+                        state.tokenStack.push(QuoteExpr.makeQuote(state.tokenStack.pop()));
+                        state.disableQuoteMode();
+                    }
+                }
+            }
+
+            if(state.tokenStack.size() == 1) {
+                ret = state.tokenStack.pop();
             } else {
                 throw new RuntimeException("The size of PairStack is more than 1, something wrong!");
+            }
+
+            if (QuoteMode.DISABLED == state.quoteMode) {
+                return ret;
+            } else {
+                return QuoteExpr.makeQuote(ret);
             }
         } else {
             throw MimosaParserException.unfinishedPair();
