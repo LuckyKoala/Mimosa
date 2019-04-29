@@ -7,10 +7,15 @@ import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;
 import net.twodam.mimosa.utils.TypeUtil;
 
+import static net.twodam.mimosa.types.MimosaList.list;
+import static net.twodam.mimosa.utils.MimosaListUtil.append;
+
 /**
  * (define a 1)
  *
  * (define (f x) (+ x 1)) => (define f (lambda (x) (+ x 1)))
+ *
+ * TODO 嵌套define
  */
 public class DefineExpr {
     public static final MimosaSymbol TAG = MimosaSymbol.strToSymbol("define");
@@ -34,17 +39,17 @@ public class DefineExpr {
     public static MimosaType value(MimosaPair expr) {
         MimosaType val = MimosaListUtil.cadr(expr);
         if(TypeUtil.isCompatibleType(MimosaList.class, val)) {
-            return makeLambda(MimosaListUtil.cdr(val), MimosaListUtil.caddr(expr));
+            return makeLambda(MimosaListUtil.cdr(val), MimosaListUtil.cddr(expr));
         }
 
         TypeUtil.checkType(MimosaSymbol.class, val);
         return MimosaListUtil.caddr(expr);
     }
 
-    private static MimosaList makeLambda(MimosaType params, MimosaType expression) {
+    private static MimosaType makeLambda(MimosaType params, MimosaType expression) {
         TypeUtil.checkType(MimosaList.class, params);
         TypeUtil.checkType(MimosaList.class, expression);
 
-        return MimosaList.list(LambdaExpr.TAG, params, expression);
+        return append(list(LambdaExpr.TAG, params), expression);
     }
 }

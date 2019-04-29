@@ -1,19 +1,18 @@
 package net.twodam.mimosa.evaluator.expressions;
 
-import net.twodam.mimosa.exceptions.MimosaIllegalExprException;
 import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;
-import net.twodam.mimosa.utils.TypeUtil;
 
 import static net.twodam.mimosa.types.MimosaList.list;
 import static net.twodam.mimosa.utils.MimosaListUtil.append;
+import static net.twodam.mimosa.utils.MimosaListUtil.map;
 
 /**
- * (let (var val) exp1 exp2)
+ * (let ((var val) ...) exp1 exp2)
  * =>
- * ((lambda (var) exp1 exp2) val)
+ * ((lambda (var ...) exp1 exp2) val ...)
  * Created by luckykoala on 19-4-5.
  */
 public class LetExpr {
@@ -24,23 +23,17 @@ public class LetExpr {
     }
 
     public static MimosaType toLambdaExpr(MimosaPair expr) {
-        return list(
-                append(list(LambdaExpr.TAG, list(bindingKey(expr))), body(expr)),
-                bindingValue(expr)
-        );
+        return append(list(append(list(LambdaExpr.TAG, bindingKeys(expr)), body(expr))), bindingValues(expr));
     }
 
-    public static MimosaSymbol bindingKey(MimosaPair expr) {
-        MimosaType val = MimosaListUtil.caadr(expr);
-        if(TypeUtil.isCompatibleType(MimosaSymbol.class, val)) {
-            return (MimosaSymbol) val;
-        } else {
-            throw MimosaIllegalExprException.nonSymbolInLet(expr);
-        }
+    public static MimosaType bindingKeys(MimosaPair expr) {
+        MimosaType entries = MimosaListUtil.cadr(expr);
+        return map(MimosaListUtil::car, entries);
     }
 
-    public static MimosaType bindingValue(MimosaPair expr) {
-        return MimosaListUtil.cadadr(expr);
+    public static MimosaType bindingValues(MimosaPair expr) {
+        MimosaType entries = MimosaListUtil.cadr(expr);
+        return map(MimosaListUtil::cadr, entries);
     }
 
     public static MimosaType body(MimosaPair expr) {

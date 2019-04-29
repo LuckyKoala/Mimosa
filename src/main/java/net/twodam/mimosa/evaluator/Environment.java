@@ -100,6 +100,21 @@ public class Environment {
         }
     }
 
+    public static void set(Environment env, MimosaSymbol key, MimosaType newValue) {
+        while(env != null) {
+            final int index = env.entryList.lastIndexOf(Entry.wrapKey(key));
+            if(index != -1) {
+                //Found binding of key
+                env.entryList.get(index).value = newValue;
+                return;
+            } else {
+                env = env.upperEnv;
+            }
+        }
+
+        throw MimosaNoBindingException.noBindingOf(key);
+    }
+
     public static MimosaType search(Environment env, MimosaSymbol key) {
         while(env != null) {
             final int index = env.entryList.lastIndexOf(Entry.wrapKey(key));

@@ -49,6 +49,15 @@ public class Evaluator {
             MimosaType value = QuoteExpr.value(expr);
             return env -> value;
         }
+        else if(SetExpr.check(expr)) {
+            MimosaSymbol symbol = SetExpr.symbol(expr);
+            Analyzed value = analyze(SetExpr.value(expr));
+
+            return env -> {
+                Environment.set(env, symbol, value.apply(env));
+                return MimosaList.nil();
+            };
+        }
         else if(DefineExpr.check(expr)) {
             MimosaSymbol symbol = DefineExpr.symbol(expr);
             Analyzed value = analyze(DefineExpr.value(expr));

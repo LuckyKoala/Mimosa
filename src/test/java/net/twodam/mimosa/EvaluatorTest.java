@@ -47,7 +47,7 @@ public class EvaluatorTest {
 
     @Test
     public void letExpr() {
-        MimosaType expr = parse("(let (y 0) y)");
+        MimosaType expr = parse("(let ((y 0)) y)");
         assertEquals(numToVal(0), eval(expr));
     }
 
@@ -67,7 +67,7 @@ public class EvaluatorTest {
     @Test
     public void lambdaInLet() {
         assertEquals(numToVal(55),
-                eval(parse("(let (f (lambda (x) (- x 11))) " +
+                eval(parse("(let ((f (lambda (x) (- x 11)))) " +
                         "           (f (f 77)))")));
 
         assertEquals(numToVal(55),
@@ -77,13 +77,26 @@ public class EvaluatorTest {
 
     @Test
     public void lexicalScope() {
-        MimosaType parsedExpr = parse("(let (x 200)" +
-                "           (let (f (lambda (z) (- z x)))" +
-                "              (let (x 100)" +
-                "                 (let (g (lambda (z) (- z x)))" +
+        MimosaType parsedExpr = parse("(let ((x 200))" +
+                "           (let ((f (lambda (z) (- z x))))" +
+                "              (let ((x 100))" +
+                "                 (let ((g (lambda (z) (- z x))))" +
                 "                    (- (f 1) (g 1))))))");
         MimosaType evaluatedExpr = eval(parsedExpr);
         assertEquals(numToVal(-100), evaluatedExpr);
+    }
+
+    /**
+     * (define x 0)
+     *  * (let (x 2)
+     *  *   x
+     *  *   (set! x 1)
+     *  *   x)
+     *  * x
+     */
+    @Test
+    public void setExpr() {
+        assertEquals(numToVal(1), eval(parse("(begin (define _y 0) (set! _y 1) _y)")));
     }
 
     /**
