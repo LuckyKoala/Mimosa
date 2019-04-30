@@ -1,6 +1,7 @@
 package net.twodam.mimosa.generators;
 
 import net.twodam.mimosa.evaluator.expressions.*;
+import net.twodam.mimosa.evaluator.ir.IRVM;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.MimosaNumber;
 import net.twodam.mimosa.types.MimosaPair;
@@ -8,6 +9,7 @@ import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.TypeUtil;
 
+import static net.twodam.mimosa.evaluator.ir.IRVM.*;
 import static net.twodam.mimosa.types.MimosaNumber.numToVal;
 import static net.twodam.mimosa.types.MimosaSymbol.strToSymbol;
 import static net.twodam.mimosa.utils.MimosaListUtil.*;
@@ -15,24 +17,25 @@ import static net.twodam.mimosa.utils.MimosaListUtil.*;
 /**
  * 基于栈的虚拟机
  *
- * (global symbol/immediate target) (全局)将对应符号的值/立即数与target符号关联
- * (mov symbol/immediate target) 将对应符号的值/立即数与target符号关联
- * (push symbol/immediate) 将对应符号的值/立即数入栈
- * (pop symbol) 将出栈的值与符号关联
- * (call func) 调用func (参数提前入栈，结果也在栈上)
- * (compare symbol/immediate symbol/immediate) 值比较，置flag
+ * (label name) 代码块标签，用于跳转
+ * (function name) 函数标签
+ *
+ * (leave) 离开函数，返回上一层
+ *
  * (jne name) !=
  * (je name) ==
  * (jge name) >=
  * (jle name) <=
  * (jmp name) 无条件跳转
- * (label name) 代码块标签，用于跳转
- * (function name) 函数标签
- * (leave) 离开函数，返回上一层
+ * (push symbol/immediate) 将对应符号的值/立即数入栈
+ * (pop symbol) 将出栈的值与符号关联
+ * (call func) 调用func (参数提前入栈，结果也在栈上)
+ *
+ * (global symbol/immediate target) (全局)将对应符号的值/立即数与target符号关联
+ * (mov symbol/immediate target) 将对应符号的值/立即数与target符号关联
+ * (compare symbol/immediate symbol/immediate) 值比较，置flag
  */
 public class IREmitter {
-    static MimosaSymbol RET = strToSymbol("ret");
-    static MimosaSymbol FUNC = strToSymbol("func");
 
     /**
      * (inc (+ 1 1) 1) => "eval (+ 1 1)"
@@ -46,8 +49,8 @@ public class IREmitter {
     void applicationExpr(MimosaPair expr) {
         foreach(this::eval, ApplicationExpr.params(expr));
         eval(ApplicationExpr.function(expr));
-        pop(FUNC);
-        call(FUNC);
+        pop(FUNC_REGISTER);
+        call(FUNC_REGISTER);
     }
 
     /**
@@ -57,6 +60,7 @@ public class IREmitter {
      *   =>
      *
      * lambdaExpr  => (function lambda$?)
+     *         => (pop __ret_address)
      * (x)     => (pop x)
      * (+ x 1) => "eval (+ x 1)"
      *         => (push ret)
@@ -64,12 +68,13 @@ public class IREmitter {
      */
     void lambdaExpr(MimosaPair expr) {
         function(genLambdaName());
+        pop(RET_ADDRESS_REGISTER);
         foreach(p -> pop((MimosaSymbol) p), LambdaExpr.params(expr));
         foreach(p -> {
             eval(p);
-            pop(RET);
+            pop(RET_REGISTER);
         }, LambdaExpr.body(expr));
-        push(RET);
+        push(RET_REGISTER);
         leave();
     }
 
@@ -98,8 +103,8 @@ public class IREmitter {
         String finalLabel = labelNames[2];
 
         eval(IfExpr.predicate(expr));
-        pop(RET);
-        compare(RET, numToVal(0));
+        pop(RET_REGISTER);
+        compare(RET_REGISTER, numToVal(0));
         jne(falseLabel);
         //fall through to true branch
         label(trueLabel);
@@ -133,11 +138,11 @@ public class IREmitter {
         MimosaType valueExpr = DefineExpr.value(expr);
 
         eval(valueExpr);
-        if(LambdaExpr.check(expr)) {
+        if(LambdaExpr.check((MimosaPair) valueExpr)) {
             global(strToSymbol(lastLambdaName), symbol);
         } else {
-            pop(RET);
-            global(RET, symbol);
+            pop(RET_REGISTER);
+            global(RET_REGISTER, symbol);
         }
     }
 
@@ -181,8 +186,8 @@ public class IREmitter {
     public void eval(MimosaType val) {
         //No more analyzing for these "simple" types.
         if (TypeUtil.isNumber(val)) {
-            mov(val, RET);
-            push(RET);
+            mov(val, RET_REGISTER);
+            push(RET_REGISTER);
             return;
         } else if (TypeUtil.isSymbol(val)) {
             push((MimosaSymbol) val);
