@@ -1,4 +1,4 @@
-> 当前进度： 生成中间代码
+> 当前进度： 优化中间代码
 
 [LETg](./notes/LET.md)
 [Lambda与词法闭包](./notes/Lambda.md)
