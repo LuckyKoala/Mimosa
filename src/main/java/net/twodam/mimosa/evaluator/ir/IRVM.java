@@ -9,6 +9,7 @@ import net.twodam.mimosa.utils.TypeUtil;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static net.twodam.mimosa.utils.MimosaListUtil.*;
 
 public class IRVM {
@@ -16,6 +17,10 @@ public class IRVM {
     static final int LABEL_FACTOR = 4;
 
     public static final MimosaSymbol RET_REGISTER = MimosaSymbol.strToSymbol("ret");
+
+    //should only be used by generated code
+    public static final MimosaSymbol INTERMEDIATE_REGISTER = MimosaSymbol.strToSymbol("__intermedia");
+    public static final MimosaSymbol TEMP__REGISTER = MimosaSymbol.strToSymbol("__temp");
     public static final MimosaSymbol FUNC_REGISTER = MimosaSymbol.strToSymbol("__func");
     public static final MimosaSymbol FLAG_REGISTER = MimosaSymbol.strToSymbol("__flag");
     public static final MimosaSymbol RET_ADDRESS_REGISTER = MimosaSymbol.strToSymbol("__ret_address");
@@ -28,6 +33,11 @@ public class IRVM {
 
     static class Register {
         int val;
+
+        @Override
+        public String toString() {
+            return Integer.toString(val);
+        }
     }
 
     private IRVM(List<MimosaType> source) {
@@ -39,7 +49,17 @@ public class IRVM {
     }
 
     Register registerOf(MimosaSymbol symbol) {
-        return registerMap.putIfAbsent(symbol, new Register());
+        return registerOf(symbol, false);
+    }
+
+    Register registerOf(MimosaSymbol symbol, boolean createIfNotFound) {
+        if(createIfNotFound) {
+            return registerMap.computeIfAbsent(symbol, key -> new Register());
+        } else {
+            Register result = registerMap.get(symbol);
+            requireNonNull(result, "Can't find register " + symbol);
+            return result;
+        }
     }
 
     public static int run(List<String> source) {
@@ -47,19 +67,25 @@ public class IRVM {
 
         irvm.analyze();
         irvm.eval();
-        return irvm.registerOf(RET_REGISTER).val;
+        return irvm.getReturnValue();
+    }
+
+    int getReturnValue() {
+        if(!stack.empty()) {
+            registerOf(RET_REGISTER, true).val = stack.pop();
+        }
+        return registerOf(RET_REGISTER).val;
     }
 
     void analyze() {
         Iterator<MimosaType> iterator = source.iterator();
         while(iterator.hasNext()) {
             MimosaType expr = iterator.next();
-            MimosaType tag = car(expr);
+            MimosaSymbol tag = (MimosaSymbol) car(expr);
 
             if(INSTRUCTION.LABEL.check(tag) || INSTRUCTION.FUNCTION.check(tag)) {
                 MimosaSymbol name = (MimosaSymbol) cadr(expr);
-                labelMap.put(name, pc);
-                iterator.remove();
+                labelMap.put(name, pc+1);
             }
 
             pc++;
@@ -67,95 +93,122 @@ public class IRVM {
         pc = 0;
     }
 
+    int labelToPC(MimosaType label) {
+        TypeUtil.checkType(MimosaSymbol.class, label);
+        Object result = labelMap.get(label);
+        requireNonNull(result, "Can't find label " + label);
+        return (int) result;
+    }
+
     void eval() {
+        outerLoop:
         while(pc < source.size()) {
             MimosaType expr = source.get(pc);
-            MimosaType tag = car(expr);
+            MimosaSymbol tag = (MimosaSymbol) car(expr);
 
-            if(INSTRUCTION.LABEL.check(tag) || INSTRUCTION.FUNCTION.check(tag)) {
-                throw new RuntimeException("label/function instruction found in eval stage, code is " + expr);
+            if(INSTRUCTION.LABEL.check(tag)) {
+                pc++;
+                continue;
+            } else if(INSTRUCTION.FUNCTION.check(tag)) {
+                //skip function definition if fall through
+                int newPC = pc++;
+                MimosaType _expr;
+                MimosaSymbol _tag;
+                do {
+                    _expr = source.get(newPC);
+                    _tag = (MimosaSymbol) car(_expr);
+                    if(INSTRUCTION.LEAVE.check(_tag)) {
+                        pc = newPC+1;
+                        continue outerLoop;
+                    }
+                    newPC++;
+                } while(newPC < source.size());
+                throw new RuntimeException("Found not completed function definition for " + cadr(_expr));
             }
 
             if(INSTRUCTION.LEAVE.check(tag)) {
-                pc = stack.pop();
+                pc = registerOf(RET_ADDRESS_REGISTER).val;
                 continue;
             }
 
             MimosaType first = cadr(expr);
             if(INSTRUCTION.JMP.check(tag)) {
-                pc = labelMap.get(first);
+                pc = labelToPC(first);
                 continue;
             }
             else if(INSTRUCTION.JE.check(tag)) {
                 if(registerOf(FLAG_REGISTER).val == 0) {
-                    pc = labelMap.get(first);
+                    pc = labelToPC(first);
                     continue;
                 }
             }
             else if(INSTRUCTION.JNE.check(tag)) {
                 if(registerOf(FLAG_REGISTER).val != 0) {
-                    pc = labelMap.get(first);
+                    pc = labelToPC(first);
                     continue;
                 }
             }
             else if(INSTRUCTION.JGE.check(tag)) {
                 if(registerOf(FLAG_REGISTER).val >= 0) {
-                    pc = labelMap.get(first);
+                    pc = labelToPC(first);
                     continue;
                 }
             }
             else if(INSTRUCTION.JLE.check(tag)) {
                 if(registerOf(FLAG_REGISTER).val <= 0) {
-                    pc = labelMap.get(first);
+                    pc = labelToPC(first);
                     continue;
                 }
             }
             else if(INSTRUCTION.CALL.check(tag)) {
                 stack.push(pc+1);
-                pc = labelMap.get(first);
+                pc = getValue(first);
                 continue;
             }
             else if(INSTRUCTION.PUSH.check(tag)) {
-                int value;
-                if(TypeUtil.isCompatibleType(MimosaSymbol.class, first)) {
-                    value = registerOf((MimosaSymbol) first).val;
-                } else {
-                    value = MimosaNumber.valToNum(first);
-                }
+                int value = getValue(first);
                 stack.push(value);
             }
             else if(INSTRUCTION.POP.check(tag)) {
-                registerOf((MimosaSymbol) first).val = stack.pop();
+                registerOf((MimosaSymbol) first, true).val = stack.pop();
             }
             else {
                 MimosaType second = caddr(expr);
                 if(INSTRUCTION.GLOBAL.check(tag)) {
-                    int value;
-                    if(TypeUtil.isCompatibleType(MimosaSymbol.class, first)) {
-                        value = registerOf((MimosaSymbol) first).val;
-                    } else {
-                        value = MimosaNumber.valToNum(first);
-                    }
-                    //TODO implement semantic of global
-                    registerOf((MimosaSymbol) first).val = value;
+                    registerOf((MimosaSymbol) second, true).val = getValue(first);
                 }
                 else if(INSTRUCTION.MOV.check(tag)) {
-                    int value;
-                    if(TypeUtil.isCompatibleType(MimosaSymbol.class, first)) {
-                        value = registerOf((MimosaSymbol) first).val;
-                    } else {
-                        value = MimosaNumber.valToNum(first);
-                    }
-                    registerOf((MimosaSymbol) first).val = value;
+                    registerOf((MimosaSymbol) second, true).val = getValue(first);
                 }
                 else if(INSTRUCTION.COMPARE.check(tag)) {
-                    registerOf(FLAG_REGISTER).val = Integer.compare(registerOf((MimosaSymbol) first).val,
-                            MimosaNumber.valToNum(second));
+                    registerOf(FLAG_REGISTER, true).val = Integer.compare(getValue(first), getValue(second));
+                } else {
+                    //builtin function
+                    Builtin.BuiltinFunction builtinFunction = Builtin.map.get(tag);
+                    requireNonNull(builtinFunction, "Can't find builtin function " + tag);
+                    MimosaSymbol value = (MimosaSymbol) first;
+                    MimosaSymbol target = (MimosaSymbol) second;
+                    registerOf(target).val = builtinFunction.apply(registerOf(value).val, registerOf(target).val);
                 }
             }
 
             pc++;
         }
+    }
+
+    private int getValue(MimosaType expr) {
+        int value;
+        if(TypeUtil.isCompatibleType(MimosaSymbol.class, expr)) {
+            MimosaSymbol s = (MimosaSymbol) expr;
+            if(labelMap.containsKey(s)) {
+                value = labelToPC(s);
+            } else {
+                value = registerOf(s).val;
+            }
+        } else {
+            value = MimosaNumber.valToNum(expr);
+        }
+        return value;
     }
 
     enum INSTRUCTION {
@@ -180,7 +233,7 @@ public class IRVM {
             this.tag = MimosaSymbol.strToSymbol(tag);
         }
 
-        public boolean check(MimosaType anotherTag) {
+        public boolean check(MimosaSymbol anotherTag) {
             return this.tag.equals(anotherTag);
         }
     }

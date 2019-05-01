@@ -8,7 +8,7 @@ import java.util.List;
  * Created by luckykoala on 19-4-5.
  */
 public class MimosaNumber extends MimosaVal {
-    private static final MimosaNumber ZERO = new MimosaNumber(0);
+    public static final MimosaNumber ZERO = new MimosaNumber(0);
 
     MimosaNumber(int number) {
         super(number);

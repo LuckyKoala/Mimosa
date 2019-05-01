@@ -15,16 +15,22 @@ import static org.junit.Assert.assertEquals;
  * Created by luckykoala on 19-4-8.
  */
 public class EvaluatorTest {
-    @Test
-    public void constExpr() {
-        MimosaType expr = parse("1");
-        assertEquals(numToVal(1), eval(expr));
+    private MimosaType run(String code) {
+        return eval(parse(code));
+    }
+
+    private MimosaType run(String code, Environment env) {
+        return eval(parse(code), env);
     }
 
     @Test
-    public void symbolExpr() {
-        MimosaType expr = parse("x");
-        assertEquals(numToVal(1), eval(expr,
+    public void constExpr() {
+        assertEquals(numToVal(1), run("1"));
+    }
+
+    @Test
+    public void variableExpr() {
+        assertEquals(numToVal(1), run("x",
                 Environment.extend(Environment.empty(),
                         strToSymbol("x"),
                         MimosaNumber.numToVal(1))));
@@ -32,49 +38,45 @@ public class EvaluatorTest {
 
     @Test
     public void ifExpr() {
-        MimosaType expr = parse("(if (zero? 0) 1 0)");
-        assertEquals(numToVal(1), eval(expr));
+        assertEquals(numToVal(1), run("(if (zero? 0) 1 0)"));
     }
 
     @Test
     public void letExpr() {
-        MimosaType expr = parse("(let ((y 0)) y)");
-        assertEquals(numToVal(0), eval(expr));
+        assertEquals(numToVal(0), run("(let ((y 0)) y)"));
     }
 
     @Test
     public void beginExpr() {
-        MimosaType expr = parse("(begin (+ 1 1) (+ 1 1))");
-        assertEquals(numToVal(2), eval(expr));
+        assertEquals(numToVal(2), run("(begin (+ 1 1) (+ 1 1))"));
     }
 
     @Test
     public void lambdaExpr() {
-        assertEquals(numToVal(1), eval(parse("((lambda (y) (- y 1)) 2)")));
+        assertEquals(numToVal(1), run("((lambda (y) (- y 1)) 2)"));
 
-        assertEquals(strToSymbol("override-val"), eval(parse("((lambda (y) (- y 1) (quote override-val)) 2)")));
+        assertEquals(strToSymbol("override-val"), run("((lambda (y) (- y 1) (quote override-val)) 2)"));
     }
 
     @Test
     public void lambdaInLet() {
         assertEquals(numToVal(55),
-                eval(parse("(let ((f (lambda (x) (- x 11)))) " +
-                        "           (f (f 77)))")));
+                run("(let ((f (lambda (x) (- x 11)))) " +
+                        "           (f (f 77)))"));
 
         assertEquals(numToVal(55),
-                eval(parse("((lambda (f) (f (f 77))) " +
-                        "         (lambda (x) (- x 11)))")));
+                run("((lambda (f) (f (f 77))) " +
+                        "         (lambda (x) (- x 11)))"));
     }
 
     @Test
     public void lexicalScope() {
-        MimosaType parsedExpr = parse("(let ((x 200))" +
+        MimosaType result = run("(let ((x 200))" +
                 "           (let ((f (lambda (z) (- z x))))" +
                 "              (let ((x 100))" +
                 "                 (let ((g (lambda (z) (- z x))))" +
                 "                    (- (f 1) (g 1))))))");
-        MimosaType evaluatedExpr = eval(parsedExpr);
-        assertEquals(numToVal(-100), evaluatedExpr);
+        assertEquals(numToVal(-100), result);
     }
 
     /**
@@ -87,7 +89,7 @@ public class EvaluatorTest {
      */
     @Test
     public void setExpr() {
-        assertEquals(numToVal(1), eval(parse("(begin (define _y 0) (set! _y 1) _y)")));
+        assertEquals(numToVal(1), run("(begin (define _y 0) (set! _y 1) _y)"));
     }
 
     /**
@@ -95,11 +97,11 @@ public class EvaluatorTest {
      */
     @Test
     public void defineExpr() {
-        eval(parse("(define _x 1)"));
-        assertEquals(numToVal(1), eval(parse("_x")));
-        eval(parse("(define _inc (lambda (x) (+ x 1)))"));
-        assertEquals(numToVal(2), eval(parse("(_inc 1)")));
-        eval(parse("(define (_dec x) (- x 1))"));
-        assertEquals(numToVal(0), eval(parse("(_dec 1)")));
+        run("(define _x 1)");
+        assertEquals(numToVal(1), run("_x"));
+        run("(define _inc (lambda (x) (+ x 1)))");
+        assertEquals(numToVal(2), run("(_inc 1)"));
+        run("(define (_dec x) (- x 1))");
+        assertEquals(numToVal(0), run("(_dec 1)"));
     }
 }

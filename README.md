@@ -1,7 +1,8 @@
 > 当前进度： 生成中间代码
 
-[LET](./notes/LET.md)
+[LETg](./notes/LET.md)
 [Lambda与词法闭包](./notes/Lambda.md)
+[中间代码生成与执行](./notes/IR.md)
 
 > 数据类型
 
@@ -24,17 +25,22 @@
 
 > 中间代码： 基于栈的虚拟机指令
 
- * (global symbol symbol/immediate) 全局字面量 string number
- * (mov symbol/immediate target) 将对应符号的值/立即数与target符号关联
+ * (label name) 代码块标签，用于跳转
+ * (function name) 函数标签
+ *
+ * (leave) 离开函数，返回上一层
+ *
+ * (jne name) !=
+ * (je name) ==
+ * (jge name) >=
+ * (jle name) <=
+ * (jmp name) 无条件跳转
  * (push symbol/immediate) 将对应符号的值/立即数入栈
  * (pop symbol) 将出栈的值与符号关联
  * (call func) 调用func (参数提前入栈，结果也在栈上)
+ *
+ * (global symbol/immediate target) (全局)将对应符号的值/立即数与target符号关联
+ * (mov symbol/immediate target) 将对应符号的值/立即数与target符号关联
  * (compare symbol/immediate symbol/immediate) 值比较，置flag
- * (jne) !=
- * (je) ==
- * (jge) >=
- * (jle) <=
- * (jmp) 无条件跳转
- * (label name) 代码块标签，用于跳转
- * (function name) 函数标签
- * (ret) 离开函数，返回上一层
+ *
+ * (#primitive function# symbol/immediate target)

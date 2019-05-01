@@ -1,5 +1,6 @@
 package net.twodam.mimosa;
 
+import net.twodam.mimosa.evaluator.ir.IRVM;
 import net.twodam.mimosa.exceptions.MimosaException;
 import net.twodam.mimosa.generators.IREmitter;
 import net.twodam.mimosa.types.MimosaType;
@@ -65,9 +66,11 @@ public class Core {
             try {
                 MimosaType parsedExpr = parse(input);
                 emitter.eval(parsedExpr);
-
                 System.out.println(emitter);
+                int result = IRVM.run(emitter.toSource());
                 emitter.clear();
+
+                System.out.println(result);
             } catch (MimosaException e) {
                 System.out.println(IR_PREFIX + ERROR + e.getMessage());
             }

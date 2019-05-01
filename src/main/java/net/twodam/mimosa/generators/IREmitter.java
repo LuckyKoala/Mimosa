@@ -1,16 +1,15 @@
 package net.twodam.mimosa.generators;
 
 import net.twodam.mimosa.evaluator.expressions.*;
-import net.twodam.mimosa.evaluator.ir.IRVM;
+import net.twodam.mimosa.evaluator.ir.Builtin;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
-import net.twodam.mimosa.types.MimosaNumber;
-import net.twodam.mimosa.types.MimosaPair;
-import net.twodam.mimosa.types.MimosaSymbol;
-import net.twodam.mimosa.types.MimosaType;
+import net.twodam.mimosa.types.*;
 import net.twodam.mimosa.utils.TypeUtil;
 
+import java.util.*;
+import java.util.function.Consumer;
+
 import static net.twodam.mimosa.evaluator.ir.IRVM.*;
-import static net.twodam.mimosa.types.MimosaNumber.numToVal;
 import static net.twodam.mimosa.types.MimosaSymbol.strToSymbol;
 import static net.twodam.mimosa.utils.MimosaListUtil.*;
 
@@ -34,21 +33,68 @@ import static net.twodam.mimosa.utils.MimosaListUtil.*;
  * (global symbol/immediate target) (全局)将对应符号的值/立即数与target符号关联
  * (mov symbol/immediate target) 将对应符号的值/立即数与target符号关联
  * (compare symbol/immediate symbol/immediate) 值比较，置flag
+ *
+ * (#primitive function# symbol/immediate target)
+ *
  */
 public class IREmitter {
+    Map<MimosaSymbol, Consumer<String>> compareFuncs = new HashMap<MimosaSymbol, Consumer<String>>() {{
+        put(strToSymbol("="), falseLabel -> jne(falseLabel));
+        put(strToSymbol(">"), falseLabel -> jle(falseLabel));
+        put(strToSymbol(">="), falseLabel -> jl(falseLabel));
+        put(strToSymbol("<"), falseLabel -> jge(falseLabel));
+        put(strToSymbol("<="), falseLabel -> jg(falseLabel));
+    }};
+
 
     /**
-     * (inc (+ 1 1) 1) => "eval (+ 1 1)"
-     *               => # (pop ret)
-     *               => # (push ret)
-     *               => (push 1)
-     *               => # "eval inc"
-     *               => (pop func)
-     *               => (call func)
+     * (inc (- 1 2) 1)
+     *
+     *
+     * (- 1 2)      => "eval 1"
+     *              => (pop temp) //initial
+     *              => "eval 2"
+     *              => (pop intermedia)
+     *              => (- intermedia temp)
+     *              => (push temp)
+     * (inc ... 1)  => "eval 1"
+     *              => "eval inc"
+     *              => (pop func)
+     *              => (call func)
      */
     void applicationExpr(MimosaPair expr) {
-        foreach(this::eval, ApplicationExpr.params(expr));
-        eval(ApplicationExpr.function(expr));
+        MimosaType params = ApplicationExpr.params(expr);
+        MimosaType functionExpr = ApplicationExpr.function(expr);
+
+        if(TypeUtil.isCompatibleType(MimosaSymbol.class, functionExpr)) {
+            MimosaSymbol funcName = (MimosaSymbol) functionExpr;
+
+            if(compareFuncs.containsKey(funcName)) {
+                eval(car(params));
+                pop(INTERMEDIATE_REGISTER);
+                eval(cadr(params));
+                pop(TEMP__REGISTER);
+                compare(INTERMEDIATE_REGISTER, TEMP__REGISTER);
+                compareFuncs.get(funcName).accept(lastFalseLabelName);
+                return;
+            }
+
+            if(Builtin.map.containsKey(funcName)) {
+                //for builtin function
+                eval(car(params));
+                pop(TEMP__REGISTER);
+                foreach(p -> {
+                    eval(p);
+                    pop(INTERMEDIATE_REGISTER);
+                    instruction("(%s %s %s)", funcName, INTERMEDIATE_REGISTER, TEMP__REGISTER);
+                }, cdr(params));
+                push(TEMP__REGISTER);
+                return;
+            }
+        }
+
+        foreach(this::eval, params);
+        eval(functionExpr);
         pop(FUNC_REGISTER);
         call(FUNC_REGISTER);
     }
@@ -69,13 +115,24 @@ public class IREmitter {
     void lambdaExpr(MimosaPair expr) {
         function(genLambdaName());
         pop(RET_ADDRESS_REGISTER);
-        foreach(p -> pop((MimosaSymbol) p), LambdaExpr.params(expr));
+
+        //params stack a->b>c
+        //so the order of pop is c->b>a
+        Stack<MimosaSymbol> stack = new Stack<>();
+        foreach(p -> stack.push((MimosaSymbol) p), LambdaExpr.params(expr));
+        while(!stack.empty()) {
+            pop(stack.pop());
+        }
+
+        push(RET_ADDRESS_REGISTER);
         foreach(p -> {
             eval(p);
             pop(RET_REGISTER);
         }, LambdaExpr.body(expr));
+        pop(RET_ADDRESS_REGISTER);
         push(RET_REGISTER);
         leave();
+        push(lastLambdaName);
     }
 
     /**
@@ -83,7 +140,7 @@ public class IREmitter {
      *
      * (zero? (- 1 1)) =>   "eval (zero? (- 1 1))"
      *                 =>   (pop ret)
-     *                 =>   (compare ret 0)
+     *                 =>   (compare ret 1)
      * (if ...         =>   (jne false$?)
      *   1             => (label true$?)
      *                 =>   "eval 1"
@@ -103,9 +160,6 @@ public class IREmitter {
         String finalLabel = labelNames[2];
 
         eval(IfExpr.predicate(expr));
-        pop(RET_REGISTER);
-        compare(RET_REGISTER, numToVal(0));
-        jne(falseLabel);
         //fall through to true branch
         label(trueLabel);
         eval(IfExpr.trueExpr(expr));
@@ -138,12 +192,15 @@ public class IREmitter {
         MimosaType valueExpr = DefineExpr.value(expr);
 
         eval(valueExpr);
-        if(LambdaExpr.check((MimosaPair) valueExpr)) {
-            global(strToSymbol(lastLambdaName), symbol);
-        } else {
-            pop(RET_REGISTER);
-            global(RET_REGISTER, symbol);
+        if(TypeUtil.isCompatibleType(MimosaPair.class, valueExpr)) {
+            if(LambdaExpr.check((MimosaPair) valueExpr)) {
+                global(lastLambdaName, symbol);
+                return;
+            }
         }
+
+        pop(RET_REGISTER);
+        global(RET_REGISTER, symbol);
     }
 
     /**
@@ -161,14 +218,20 @@ public class IREmitter {
         MimosaType entries = LetExpr.entries(expr);
 
         foreach(entry -> {
-            MimosaType key = car(entry);
-            MimosaType value = cdr(entry);
+            MimosaSymbol key = (MimosaSymbol) car(entry);
+            MimosaType valueExpr = cadr(entry);
 
-            eval(value);
-            pop((MimosaSymbol) key);
+            eval(valueExpr);
+            if(TypeUtil.isCompatibleType(MimosaPair.class, valueExpr)) {
+                if(LambdaExpr.check((MimosaPair) valueExpr)) {
+                    mov(lastLambdaName, key);
+                    return;
+                }
+            }
+            pop(key);
         }, entries);
 
-        eval(LetExpr.body(expr));
+        foreach(this::eval, LetExpr.body(expr));
     }
 
     /**
@@ -186,8 +249,7 @@ public class IREmitter {
     public void eval(MimosaType val) {
         //No more analyzing for these "simple" types.
         if (TypeUtil.isNumber(val)) {
-            mov(val, RET_REGISTER);
-            push(RET_REGISTER);
+            push((MimosaNumber)val);
             return;
         } else if (TypeUtil.isSymbol(val)) {
             push((MimosaSymbol) val);
@@ -233,6 +295,10 @@ public class IREmitter {
         builder.setLength(0);
     }
 
+    public List<String> toSource() {
+        return Arrays.asList(builder.toString().replace('\t', ' ').split("\n"));
+    }
+
     @Override
     public String toString() {
         return builder.toString();
@@ -241,19 +307,23 @@ public class IREmitter {
 
     int lambdaCounter = 0;
     int branchCounter = 0;
-    String lastLambdaName = "UNINITIALIZED";
+    MimosaSymbol lastLambdaName = strToSymbol("undefined");
+    String lastFalseLabelName = "undefined";
 
     String genLambdaName() {
-        lastLambdaName = String.format("lambda$%d", lambdaCounter++);
-        return lastLambdaName;
+        String name = String.format("lambda$%d", lambdaCounter++);
+        lastLambdaName = strToSymbol(name);
+        return name;
     }
 
     String[] genBranchNames() {
-        return new String[] {
+        String[] ret = new String[] {
                 String.format("true$%d", branchCounter),
                 String.format("false$%d", branchCounter),
                 String.format("final$%d", branchCounter++)
         };
+        lastFalseLabelName = ret[1];
+        return ret;
     }
 
     void emit(String str) {
@@ -266,27 +336,19 @@ public class IREmitter {
         builder.append('\n');
     }
 
-    void symbolOrImmediate(MimosaType value) {
-        if(!TypeUtil.isCompatibleType(MimosaSymbol.class, value)) {
-            TypeUtil.checkType(MimosaNumber.class, value);
-        }
-    }
-
     void instruction(String format, Object... args) {
         emit(String.format(format, args));
     }
 
-    void global(MimosaType value, MimosaSymbol symbol) {
-        symbolOrImmediate(value);
+    void global(MimosaVal value, MimosaSymbol symbol) {
         instruction("(global %s %s)", value, symbol);
     }
 
-    void mov(MimosaType value, MimosaSymbol target) {
-        symbolOrImmediate(value);
+    void mov(MimosaVal value, MimosaSymbol target) {
         instruction("(mov %s %s)", value, target);
     }
 
-    void push(MimosaSymbol target) {
+    void push(MimosaVal target) {
         instruction("(push %s)", target);
     }
 
@@ -298,9 +360,7 @@ public class IREmitter {
         instruction("(call %s)", target);
     }
 
-    void compare(MimosaType value1, MimosaType value2) {
-        symbolOrImmediate(value1);
-        symbolOrImmediate(value2);
+    void compare(MimosaVal value1, MimosaVal value2) {
         instruction("(compare %s %s)", value1, value2);
     }
 
@@ -310,6 +370,14 @@ public class IREmitter {
 
     void je(String name) {
         instruction("(je %s)", name);
+    }
+
+    void jl(String name) {
+        instruction("(jl %s)", name);
+    }
+
+    void jg(String name) {
+        instruction("(jg %s)", name);
     }
 
     void jge(String name) {
