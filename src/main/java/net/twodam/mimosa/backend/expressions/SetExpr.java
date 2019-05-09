@@ -1,5 +1,6 @@
-package net.twodam.mimosa.evaluator.expressions;
+package net.twodam.mimosa.backend.expressions;
 
+import net.twodam.mimosa.types.MimosaList;
 import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
@@ -19,6 +20,10 @@ public class SetExpr {
 
     public static boolean check(MimosaPair expr) {
         return TAG.equals(expr.car());
+    }
+
+    public static MimosaType makeSet(MimosaSymbol symbol, MimosaType value) {
+        return MimosaList.list(TAG, symbol, value);
     }
 
     public static MimosaSymbol symbol(MimosaPair expr) {

@@ -1,7 +1,7 @@
 package net.twodam.mimosa.generators;
 
-import net.twodam.mimosa.evaluator.expressions.*;
-import net.twodam.mimosa.evaluator.ir.Builtin;
+import net.twodam.mimosa.backend.expressions.*;
+import net.twodam.mimosa.backend.ir.Builtin;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.*;
 import net.twodam.mimosa.utils.TypeUtil;
@@ -9,7 +9,7 @@ import net.twodam.mimosa.utils.TypeUtil;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static net.twodam.mimosa.evaluator.ir.IRVM.*;
+import static net.twodam.mimosa.backend.ir.IRVM.*;
 import static net.twodam.mimosa.types.MimosaSymbol.strToSymbol;
 import static net.twodam.mimosa.utils.MimosaListUtil.*;
 

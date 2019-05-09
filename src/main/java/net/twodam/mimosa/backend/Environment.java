@@ -1,4 +1,4 @@
-package net.twodam.mimosa.evaluator;
+package net.twodam.mimosa.backend;
 
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.exceptions.MimosaNoBindingException;

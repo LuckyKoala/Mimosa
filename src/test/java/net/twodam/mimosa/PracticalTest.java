@@ -5,7 +5,7 @@ import net.twodam.mimosa.types.MimosaNumber;
 import net.twodam.mimosa.types.MimosaType;
 import org.junit.Test;
 
-import static net.twodam.mimosa.evaluator.Evaluator.eval;
+import static net.twodam.mimosa.backend.Evaluator.eval;
 import static net.twodam.mimosa.parser.Parser.parse;
 import static org.junit.Assert.assertEquals;
 

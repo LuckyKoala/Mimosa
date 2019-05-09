@@ -1,5 +1,6 @@
-package net.twodam.mimosa.evaluator.expressions;
+package net.twodam.mimosa.backend.expressions;
 
+import net.twodam.mimosa.types.MimosaList;
 import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
@@ -14,6 +15,10 @@ public class IfExpr {
 
     public static boolean check(MimosaPair expr) {
         return TAG.equals(expr.car());
+    }
+
+    public static MimosaType makeIf(MimosaType predicate, MimosaType trueExpr, MimosaType falseExpr) {
+        return MimosaList.list(TAG, predicate, trueExpr, falseExpr);
     }
 
     public static MimosaType predicate(MimosaPair expr) {

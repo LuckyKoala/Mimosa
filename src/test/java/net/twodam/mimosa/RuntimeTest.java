@@ -3,7 +3,7 @@ package net.twodam.mimosa;
 import net.twodam.mimosa.types.MimosaBool;
 import org.junit.Test;
 
-import static net.twodam.mimosa.evaluator.Evaluator.eval;
+import static net.twodam.mimosa.backend.Evaluator.eval;
 import static net.twodam.mimosa.parser.Parser.parse;
 import static net.twodam.mimosa.types.MimosaList.list;
 import static net.twodam.mimosa.types.MimosaNumber.numToVal;

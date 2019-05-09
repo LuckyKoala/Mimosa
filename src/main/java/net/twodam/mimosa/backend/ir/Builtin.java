@@ -1,4 +1,4 @@
-package net.twodam.mimosa.evaluator.ir;
+package net.twodam.mimosa.backend.ir;
 
 import net.twodam.mimosa.types.MimosaSymbol;
 

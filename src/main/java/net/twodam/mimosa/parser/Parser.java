@@ -1,6 +1,6 @@
 package net.twodam.mimosa.parser;
 
-import net.twodam.mimosa.evaluator.expressions.QuoteExpr;
+import net.twodam.mimosa.backend.expressions.QuoteExpr;
 import net.twodam.mimosa.exceptions.MimosaParserException;
 import net.twodam.mimosa.types.*;
 

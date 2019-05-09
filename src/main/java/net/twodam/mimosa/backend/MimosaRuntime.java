@@ -1,4 +1,4 @@
-package net.twodam.mimosa.evaluator;
+package net.twodam.mimosa.backend;
 
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.exceptions.MimosaNoBindingException;
@@ -8,7 +8,7 @@ import net.twodam.mimosa.utils.TypeUtil;
 import java.util.*;
 import java.util.function.Function;
 
-import static net.twodam.mimosa.evaluator.Evaluator.apply;
+import static net.twodam.mimosa.backend.Evaluator.apply;
 import static net.twodam.mimosa.types.MimosaBool.boolToVal;
 import static net.twodam.mimosa.types.MimosaList.isNil;
 import static net.twodam.mimosa.types.MimosaNumber.isZero;

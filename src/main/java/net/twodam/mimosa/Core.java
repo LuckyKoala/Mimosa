@@ -1,13 +1,13 @@
 package net.twodam.mimosa;
 
-import net.twodam.mimosa.evaluator.ir.IRVM;
+import net.twodam.mimosa.backend.ir.IRVM;
 import net.twodam.mimosa.exceptions.MimosaException;
 import net.twodam.mimosa.generators.IREmitter;
 import net.twodam.mimosa.types.MimosaType;
 
 import java.util.Scanner;
 
-import static net.twodam.mimosa.evaluator.Evaluator.eval;
+import static net.twodam.mimosa.backend.Evaluator.eval;
 import static net.twodam.mimosa.parser.Parser.parse;
 
 /**

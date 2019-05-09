@@ -1,6 +1,6 @@
-package net.twodam.mimosa.evaluator;
+package net.twodam.mimosa.backend;
 
-import net.twodam.mimosa.evaluator.expressions.*;
+import net.twodam.mimosa.backend.expressions.*;
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
 import net.twodam.mimosa.types.*;
 import net.twodam.mimosa.utils.TypeUtil;
@@ -9,12 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static net.twodam.mimosa.types.MimosaList.isNil;
-import static net.twodam.mimosa.utils.MimosaListUtil.*;
+import static net.twodam.mimosa.utils.MimosaListUtil.foreach;
 
 /**
+ * Created by luckykoala on 19-5-8.
  */
-public class Evaluator {
+public class Analyzer {
     /**
      * Separating syntactic analysis from execution.
      * So recursive function call will not analyze all the time while evaluating.
@@ -41,7 +41,7 @@ public class Evaluator {
         if(LetExpr.check(expr)) {
             return analyze(LetExpr.toLambdaExpr(expr));
         } else if(BeginExpr.check(expr)) {
-            return analyze(BeginExpr.toLambdaExpr(expr));
+            return analyze(BeginExpr.toLambdaApplication(expr));
         }
 
         //Actual analyze stage
@@ -86,44 +86,9 @@ public class Evaluator {
             List<Analyzed> params = new ArrayList<>();
             foreach(v -> params.add(analyze(v)), ApplicationExpr.params(expr));
 
-            return env -> apply(function.apply(env), params.stream().map(a -> a.apply(env)).collect(Collectors.toList()));
+            return env -> Evaluator.apply(function.apply(env), params.stream().map(a -> a.apply(env)).collect(Collectors.toList()));
         }
 
         throw MimosaEvaluatorException.unsupportedSyntax(expr);
-    }
-
-    public static MimosaType eval(MimosaType val) {
-        return eval(val, MimosaRuntime.baseEnvironment);
-    }
-
-    public static MimosaType eval(MimosaType val, Environment env) {
-        return analyze(val).apply(env);
-    }
-
-    public static MimosaType apply(MimosaType function, List<MimosaType> params) {
-        if(TypeUtil.isCompatibleType(MimosaPrimitiveFunction.class, function)) {
-            //primitive function?
-            return MimosaRuntime.applyPrimitive(((MimosaPrimitiveFunction) function).primitiveSymbol(),
-                    params);
-        } else if(TypeUtil.isCompatibleType(MimosaFunction.class, function)) {
-            //defined function?
-            MimosaFunction lambdaClosure = (MimosaFunction) function;
-            MimosaType valueExpr = MimosaList.list(params);
-            Environment extendedEnv = Environment.extend(lambdaClosure.savedEnv(),
-                    lambdaClosure.params(),
-                    valueExpr);
-            MimosaType body = lambdaClosure.body();
-            if(MimosaList.isNil(body)) {
-                return MimosaList.nil();
-            } else {
-                while(!isNil(body) && !isNil(cdr(body))) {
-                    eval(car(body), extendedEnv);
-                    body = cdr(body);
-                }
-                return eval(car(body), extendedEnv);
-            }
-        } else {
-            throw MimosaEvaluatorException.unknownFunction(function);
-        }
     }
 }

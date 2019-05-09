@@ -1,6 +1,6 @@
 package net.twodam.mimosa;
 
-import net.twodam.mimosa.evaluator.ir.IRVM;
+import net.twodam.mimosa.backend.ir.IRVM;
 import net.twodam.mimosa.generators.IREmitter;
 import org.junit.Before;
 import org.junit.Test;

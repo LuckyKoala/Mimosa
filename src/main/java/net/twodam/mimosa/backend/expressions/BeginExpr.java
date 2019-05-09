@@ -1,10 +1,12 @@
-package net.twodam.mimosa.evaluator.expressions;
+package net.twodam.mimosa.backend.expressions;
 
 import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaSymbol;
 import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;
 
+import static net.twodam.mimosa.backend.expressions.ApplicationExpr.makeApplication;
+import static net.twodam.mimosa.backend.expressions.LambdaExpr.makeLambda;
 import static net.twodam.mimosa.types.MimosaList.list;
 import static net.twodam.mimosa.utils.MimosaListUtil.append;
 
@@ -26,10 +28,12 @@ public class BeginExpr {
         return TAG.equals(expr.car());
     }
 
-    public static MimosaType toLambdaExpr(MimosaPair expr) {
-        return list(
-                append(list(LambdaExpr.TAG, list()), body(expr))
-        );
+    public static MimosaType sequenceToExp(MimosaType exprs) {
+        return append(list(TAG), exprs);
+    }
+
+    public static MimosaType toLambdaApplication(MimosaPair expr) {
+        return makeApplication(makeLambda(list(), body(expr)), list());
     }
 
     public static MimosaType body(MimosaPair expr) {

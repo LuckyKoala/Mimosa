@@ -1,6 +1,6 @@
 package net.twodam.mimosa.types;
 
-import net.twodam.mimosa.evaluator.Environment;
+import net.twodam.mimosa.backend.Environment;
 
 /**
  * Created by luckykoala on 19-4-14.
