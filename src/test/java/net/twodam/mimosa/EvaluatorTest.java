@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Created by luckykoala on 19-4-8.
+ * TODO replace all code string to structure function
  */
 public class EvaluatorTest {
     private MimosaType run(String code) {
@@ -56,6 +57,13 @@ public class EvaluatorTest {
         assertEquals(numToVal(1), run("((lambda (y) (- y 1)) 2)"));
 
         assertEquals(strToSymbol("override-val"), run("((lambda (y) (- y 1) (quote override-val)) 2)"));
+    }
+
+    @Test
+    public void doExpr() {
+        assertEquals(numToVal(4), run("(do ((x 0 x)) " +
+                "                             ((> x 3) x)" +
+                "                             (set! x (+ x 1)))"));
     }
 
     @Test

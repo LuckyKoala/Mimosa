@@ -261,6 +261,11 @@ public class IREmitter {
         MimosaPair expr = (MimosaPair) val;
 
         //Transform stage
+        if(DoExpr.check(expr)) {
+            eval(DoExpr.toLambdaApplication(expr));
+            return;
+        }
+
         if(LetExpr.check(expr)) {
             letExpr(expr);
         } else if(BeginExpr.check(expr)) {

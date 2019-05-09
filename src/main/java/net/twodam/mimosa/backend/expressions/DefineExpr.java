@@ -9,7 +9,6 @@ import net.twodam.mimosa.utils.TypeUtil;
 
 import static net.twodam.mimosa.backend.expressions.LambdaExpr.makeLambda;
 import static net.twodam.mimosa.types.MimosaList.list;
-import static net.twodam.mimosa.utils.MimosaListUtil.append;
 
 /**
  * (define a 1)

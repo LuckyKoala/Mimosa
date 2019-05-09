@@ -1,13 +1,17 @@
 package net.twodam.mimosa.backend;
 
 import net.twodam.mimosa.exceptions.MimosaEvaluatorException;
-import net.twodam.mimosa.types.*;
+import net.twodam.mimosa.types.MimosaFunction;
+import net.twodam.mimosa.types.MimosaList;
+import net.twodam.mimosa.types.MimosaPrimitiveFunction;
+import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.TypeUtil;
 
 import java.util.List;
 
 import static net.twodam.mimosa.types.MimosaList.isNil;
-import static net.twodam.mimosa.utils.MimosaListUtil.*;
+import static net.twodam.mimosa.utils.MimosaListUtil.car;
+import static net.twodam.mimosa.utils.MimosaListUtil.cdr;
 
 /**
  */

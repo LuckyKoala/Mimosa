@@ -42,6 +42,8 @@ public class Analyzer {
             return analyze(LetExpr.toLambdaExpr(expr));
         } else if(BeginExpr.check(expr)) {
             return analyze(BeginExpr.toLambdaApplication(expr));
+        } else if(DoExpr.check(expr)) {
+            return analyze(DoExpr.toLambdaApplication(expr));
         }
 
         //Actual analyze stage

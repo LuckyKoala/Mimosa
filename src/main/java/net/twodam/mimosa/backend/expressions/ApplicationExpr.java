@@ -1,6 +1,5 @@
 package net.twodam.mimosa.backend.expressions;
 
-import net.twodam.mimosa.types.MimosaList;
 import net.twodam.mimosa.types.MimosaPair;
 import net.twodam.mimosa.types.MimosaType;
 import net.twodam.mimosa.utils.MimosaListUtil;

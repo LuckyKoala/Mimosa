@@ -22,6 +22,7 @@
 
 * `(let ((var val) ...) exp1 ...)` 绑定局部变量 => lambda表达式
 * `(begin exp1 ...)` 顺序执行多个表达式 => lambda表达式
+* `(do ([id init-expr step-expr] ...) (stop?-expr finish-expr ...) commands ...)` 循环直到终止断言为真 => lambda表达式
 
 > 中间代码： 基于栈的虚拟机指令
 
