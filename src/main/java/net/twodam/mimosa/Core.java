@@ -22,7 +22,26 @@ public class Core {
     private static final String IR_PREFIX = "(IR) ";
 
     public static void main(String[] args) {
-        IR();
+        if(args.length < 1) {
+            help();
+        } else {
+            String mode = args[0];
+            if(mode.equalsIgnoreCase("repl")) {
+                REPL();
+            } else if(mode.equalsIgnoreCase("ir")) {
+                IR();
+            } else {
+                System.out.println("不支持的模式！");
+                help();
+            }
+        }
+    }
+
+    private static void help() {
+        System.out.println("=== MimosaCompiler Help ===");
+        System.out.println("mimosa repl 以REPL模式启动");
+        System.out.println("mimosa ir 以IR模式启动");
+        System.out.println("===========================");
     }
 
     private static void REPL() {
