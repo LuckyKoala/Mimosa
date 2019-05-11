@@ -1,0 +1,12 @@
+//高阶函数
+((lambda (f) (f (f 77)))
+ (lambda (x) (- x 11)))
+
+//循环
+(do ((i 0 (+ i 1))
+     (sum 0 (+ sum i)))
+  ((> i 10) sum)
+  (display i))
+
+//条件结构
+(if (zero? 0) 1 0)

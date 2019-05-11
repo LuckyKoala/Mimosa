@@ -5,6 +5,10 @@ import net.twodam.mimosa.exceptions.MimosaException;
 import net.twodam.mimosa.generators.IREmitter;
 import net.twodam.mimosa.types.MimosaType;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Scanner;
 
 import static net.twodam.mimosa.backend.Evaluator.eval;
@@ -29,7 +33,26 @@ public class Core {
             if(mode.equalsIgnoreCase("repl")) {
                 REPL();
             } else if(mode.equalsIgnoreCase("ir")) {
-                IR();
+                if(args.length >= 2) {
+                    String fileName = args[1];
+                    try {
+                        List<String> codes = Files.readAllLines(Paths.get(fileName));
+                        StringBuilder builder = new StringBuilder();
+                        codes.forEach(builder::append);
+
+                        IREmitter emitter = new IREmitter();
+                        MimosaType parsedExpr = parse(builder.toString());
+                        emitter.eval(parsedExpr);
+                        System.out.println(emitter);
+                        int result = IRVM.run(emitter.toSource());
+                        emitter.clear();
+                        System.out.println(result);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    IR();
+                }
             } else {
                 System.out.println("不支持的模式！");
                 help();
@@ -40,7 +63,7 @@ public class Core {
     private static void help() {
         System.out.println("=== MimosaCompiler Help ===");
         System.out.println("mimosa repl 以REPL模式启动");
-        System.out.println("mimosa ir 以IR模式启动");
+        System.out.println("mimosa ir filename 以IR模式启动");
         System.out.println("===========================");
     }
 
